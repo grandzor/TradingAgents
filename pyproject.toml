@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tradingagents"
+name = "tradeyuk"
 version = "0.2.5"
-description = "TradingAgents: Multi-Agents LLM Financial Trading Framework"
+description = "Tradeyuk: Framework Trading Finansial Multi-Agen LLM"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -33,10 +33,10 @@ dependencies = [
 ]
 
 [project.scripts]
-tradingagents = "cli.main:app"
+tradeyuk = "cli.main:app"
 
 [tool.setuptools.packages.find]
-include = ["tradingagents*", "cli*"]
+include = ["tradeyuk*", "cli*"]
 
 [tool.setuptools.package-data]
 cli = ["static/*"]

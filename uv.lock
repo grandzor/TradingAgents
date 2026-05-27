@@ -3498,7 +3498,7 @@ wheels = [
 ]
 
 [[package]]
-name = "tradingagents"
+name = "tradeyuk"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [

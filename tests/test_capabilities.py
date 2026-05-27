@@ -2,7 +2,7 @@
 
 import pytest
 
-from tradingagents.llm_clients.capabilities import (
+from tradeyuk.llm_clients.capabilities import (
     ModelCapabilities,
     get_capabilities,
 )

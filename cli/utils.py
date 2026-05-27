@@ -7,18 +7,18 @@ from dotenv import find_dotenv, set_key
 from rich.console import Console
 
 from cli.models import AnalystType, AssetType
-from tradingagents.llm_clients.api_key_env import get_api_key_env
-from tradingagents.llm_clients.model_catalog import get_model_options
+from tradeyuk.llm_clients.api_key_env import get_api_key_env
+from tradeyuk.llm_clients.model_catalog import get_model_options
 
 console = Console()
 
-TICKER_INPUT_EXAMPLES = "Examples: SPY, CNC.TO, 7203.T, 0700.HK"
+TICKER_INPUT_EXAMPLES = "Contoh: SPY, CNC.TO, 7203.T, 0700.HK"
 
 ANALYST_ORDER = [
-    ("Market Analyst", AnalystType.MARKET),
-    ("Sentiment Analyst", AnalystType.SOCIAL),
-    ("News Analyst", AnalystType.NEWS),
-    ("Fundamentals Analyst", AnalystType.FUNDAMENTALS),
+    ("Analis Pasar", AnalystType.MARKET),
+    ("Analis Sentimen", AnalystType.SOCIAL),
+    ("Analis Berita", AnalystType.NEWS),
+    ("Analis Fundamental", AnalystType.FUNDAMENTALS),
 ]
 
 CRYPTO_SUFFIXES = ("-USD", "-USDT", "-USDC", "-BTC", "-ETH")
@@ -27,8 +27,8 @@ CRYPTO_SUFFIXES = ("-USD", "-USDT", "-USDC", "-BTC", "-ETH")
 def get_ticker() -> str:
     """Prompt the user to enter a ticker symbol."""
     ticker = questionary.text(
-        f"Enter the exact ticker symbol to analyze ({TICKER_INPUT_EXAMPLES}):",
-        validate=lambda x: len(x.strip()) > 0 or "Please enter a valid ticker symbol.",
+        f"Masukkan simbol ticker yang tepat untuk dianalisis ({TICKER_INPUT_EXAMPLES}):",
+        validate=lambda x: len(x.strip()) > 0 or "Harap masukkan simbol ticker yang valid.",
         style=questionary.Style(
             [
                 ("text", "fg:green"),
@@ -38,7 +38,7 @@ def get_ticker() -> str:
     ).ask()
 
     if not ticker:
-        console.print("\n[red]No ticker symbol provided. Exiting...[/red]")
+        console.print("\n[red]Tidak ada simbol ticker yang diberikan. Keluar...[/red]")
         exit(1)
 
     return normalize_ticker_symbol(ticker)
@@ -83,9 +83,9 @@ def get_analysis_date() -> str:
             return False
 
     date = questionary.text(
-        "Enter the analysis date (YYYY-MM-DD):",
+        "Masukkan tanggal analisis (YYYY-MM-DD):",
         validate=lambda x: validate_date(x.strip())
-        or "Please enter a valid date in YYYY-MM-DD format.",
+        or "Harap masukkan tanggal yang valid dalam format YYYY-MM-DD.",
         style=questionary.Style(
             [
                 ("text", "fg:green"),
@@ -95,7 +95,7 @@ def get_analysis_date() -> str:
     ).ask()
 
     if not date:
-        console.print("\n[red]No date provided. Exiting...[/red]")
+        console.print("\n[red]Tidak ada tanggal yang diberikan. Keluar...[/red]")
         exit(1)
 
     return date.strip()
@@ -108,14 +108,14 @@ def select_analysts(asset_type: AssetType = AssetType.STOCK) -> List[AnalystType
         asset_type,
     )
     choices = questionary.checkbox(
-        "Select Your [Analysts Team]:",
+        "Pilih [Tim Analis] Anda:",
         choices=[
             questionary.Choice(display, value=value)
             for display, value in ANALYST_ORDER
             if value in available_analysts
         ],
-        instruction="\n- Press Space to select/unselect analysts\n- Press 'a' to select/unselect all\n- Press Enter when done",
-        validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
+        instruction="\n- Tekan Spasi untuk memilih/membatalkan analis\n- Tekan 'a' untuk memilih/membatalkan semua\n- Tekan Enter setelah selesai",
+        validate=lambda x: len(x) > 0 or "Anda harus memilih setidaknya satu analis.",
         style=questionary.Style(
             [
                 ("checkbox-selected", "fg:green"),
@@ -127,7 +127,7 @@ def select_analysts(asset_type: AssetType = AssetType.STOCK) -> List[AnalystType
     ).ask()
 
     if not choices:
-        console.print("\n[red]No analysts selected. Exiting...[/red]")
+        console.print("\n[red]Tidak ada analis yang dipilih. Keluar...[/red]")
         exit(1)
 
     return choices
@@ -138,17 +138,17 @@ def select_research_depth() -> int:
 
     # Define research depth options with their corresponding values
     DEPTH_OPTIONS = [
-        ("Shallow - Quick research, few debate and strategy discussion rounds", 1),
-        ("Medium - Middle ground, moderate debate rounds and strategy discussion", 3),
-        ("Deep - Comprehensive research, in depth debate and strategy discussion", 5),
+        ("Dangkal - Riset cepat, sedikit ronde debat dan diskusi strategi", 1),
+        ("Sedang - Titik tengah, ronde debat dan diskusi strategi moderat", 3),
+        ("Dalam - Riset komprehensif, debat dan diskusi strategi mendalam", 5),
     ]
 
     choice = questionary.select(
-        "Select Your [Research Depth]:",
+        "Pilih [Kedalaman Riset] Anda:",
         choices=[
             questionary.Choice(display, value=value) for display, value in DEPTH_OPTIONS
         ],
-        instruction="\n- Use arrow keys to navigate\n- Press Enter to select",
+        instruction="\n- Gunakan tombol panah untuk navigasi\n- Tekan Enter untuk memilih",
         style=questionary.Style(
             [
                 ("selected", "fg:yellow noinherit"),
@@ -159,7 +159,7 @@ def select_research_depth() -> int:
     ).ask()
 
     if choice is None:
-        console.print("\n[red]No research depth selected. Exiting...[/red]")
+        console.print("\n[red]Tidak ada kedalaman riset yang dipilih. Keluar...[/red]")
         exit(1)
 
     return choice
@@ -186,9 +186,9 @@ def select_openrouter_model() -> str:
     choices.append(questionary.Choice("Custom model ID", value="custom"))
 
     choice = questionary.select(
-        "Select OpenRouter Model (latest available):",
+        "Pilih Model OpenRouter (terbaru tersedia):",
         choices=choices,
-        instruction="\n- Use arrow keys to navigate\n- Press Enter to select",
+        instruction="\n- Gunakan tombol panah untuk navigasi\n- Tekan Enter untuk memilih",
         style=questionary.Style([
             ("selected", "fg:magenta noinherit"),
             ("highlighted", "fg:magenta noinherit"),
@@ -198,8 +198,8 @@ def select_openrouter_model() -> str:
 
     if choice is None or choice == "custom":
         return questionary.text(
-            "Enter OpenRouter model ID (e.g. google/gemma-4-26b-a4b-it):",
-            validate=lambda x: len(x.strip()) > 0 or "Please enter a model ID.",
+            "Masukkan ID model OpenRouter (mis: google/gemma-4-26b-a4b-it):",
+            validate=lambda x: len(x.strip()) > 0 or "Harap masukkan ID model.",
         ).ask().strip()
 
     return choice
@@ -208,8 +208,8 @@ def select_openrouter_model() -> str:
 def _prompt_custom_model_id() -> str:
     """Prompt user to type a custom model ID."""
     return questionary.text(
-        "Enter model ID:",
-        validate=lambda x: len(x.strip()) > 0 or "Please enter a model ID.",
+        "Masukkan ID model:",
+        validate=lambda x: len(x.strip()) > 0 or "Harap masukkan ID model.",
     ).ask().strip()
 
 
@@ -220,17 +220,17 @@ def _select_model(provider: str, mode: str) -> str:
 
     if provider.lower() == "azure":
         return questionary.text(
-            f"Enter Azure deployment name ({mode}-thinking):",
-            validate=lambda x: len(x.strip()) > 0 or "Please enter a deployment name.",
+            f"Masukkan nama deployment Azure ({mode}-thinking):",
+            validate=lambda x: len(x.strip()) > 0 or "Harap masukkan nama deployment.",
         ).ask().strip()
 
     choice = questionary.select(
-        f"Select Your [{mode.title()}-Thinking LLM Engine]:",
+        f"Pilih Mesin LLM [{mode.title()}-Thinking] Anda:",
         choices=[
             questionary.Choice(display, value=value)
             for display, value in get_model_options(provider, mode)
         ],
-        instruction="\n- Use arrow keys to navigate\n- Press Enter to select",
+        instruction="\n- Gunakan tombol panah untuk navigasi\n- Tekan Enter untuk memilih",
         style=questionary.Style(
             [
                 ("selected", "fg:magenta noinherit"),
@@ -241,7 +241,7 @@ def _select_model(provider: str, mode: str) -> str:
     ).ask()
 
     if choice is None:
-        console.print(f"\n[red]No {mode} thinking llm engine selected. Exiting...[/red]")
+        console.print(f"\n[red]Tidak ada mesin LLM {mode} thinking yang dipilih. Keluar...[/red]")
         exit(1)
 
     if choice == "custom":
@@ -281,12 +281,12 @@ def select_llm_provider() -> tuple[str, str | None]:
     ]
 
     choice = questionary.select(
-        "Select your LLM Provider:",
+        "Pilih Penyedia LLM Anda:",
         choices=[
             questionary.Choice(display, value=(provider_key, url))
             for display, provider_key, url in PROVIDERS
         ],
-        instruction="\n- Use arrow keys to navigate\n- Press Enter to select",
+        instruction="\n- Gunakan tombol panah untuk navigasi\n- Tekan Enter untuk memilih",
         style=questionary.Style(
             [
                 ("selected", "fg:magenta noinherit"),
@@ -297,7 +297,7 @@ def select_llm_provider() -> tuple[str, str | None]:
     ).ask()
     
     if choice is None:
-        console.print("\n[red]No LLM provider selected. Exiting...[/red]")
+        console.print("\n[red]Tidak ada penyedia LLM yang dipilih. Keluar...[/red]")
         exit(1)
 
     provider, url = choice
@@ -307,12 +307,12 @@ def select_llm_provider() -> tuple[str, str | None]:
 def ask_openai_reasoning_effort() -> str:
     """Ask for OpenAI reasoning effort level."""
     choices = [
-        questionary.Choice("Medium (Default)", "medium"),
-        questionary.Choice("High (More thorough)", "high"),
-        questionary.Choice("Low (Faster)", "low"),
+        questionary.Choice("Sedang (Default)", "medium"),
+        questionary.Choice("Tinggi (Lebih menyeluruh)", "high"),
+        questionary.Choice("Rendah (Lebih cepat)", "low"),
     ]
     return questionary.select(
-        "Select Reasoning Effort:",
+        "Pilih Tingkat Penalaran:",
         choices=choices,
         style=questionary.Style([
             ("selected", "fg:cyan noinherit"),
@@ -330,11 +330,11 @@ def ask_anthropic_effort() -> str | None:
     common selection range.
     """
     return questionary.select(
-        "Select Effort Level:",
+        "Pilih Tingkat Upaya:",
         choices=[
-            questionary.Choice("High (recommended)", "high"),
-            questionary.Choice("Medium (balanced)", "medium"),
-            questionary.Choice("Low (faster, cheaper)", "low"),
+            questionary.Choice("Tinggi (direkomendasikan)", "high"),
+            questionary.Choice("Sedang (seimbang)", "medium"),
+            questionary.Choice("Rendah (lebih cepat, lebih murah)", "low"),
         ],
         style=questionary.Style([
             ("selected", "fg:cyan noinherit"),
@@ -351,10 +351,10 @@ def ask_gemini_thinking_config() -> str | None:
     Client maps to appropriate API param based on model series.
     """
     return questionary.select(
-        "Select Thinking Mode:",
+        "Pilih Mode Berpikir:",
         choices=[
-            questionary.Choice("Enable Thinking (recommended)", "high"),
-            questionary.Choice("Minimal/Disable Thinking", "minimal"),
+            questionary.Choice("Aktifkan Berpikir (direkomendasikan)", "high"),
+            questionary.Choice("Minimal/Nonaktifkan Berpikir", "minimal"),
         ],
         style=questionary.Style([
             ("selected", "fg:green noinherit"),
@@ -371,14 +371,14 @@ def ask_glm_region() -> tuple[str, str]:
     accounts; keys aren't interchangeable. Returns (provider_key, backend_url).
     """
     return questionary.select(
-        "Select GLM platform:",
+        "Pilih platform GLM:",
         choices=[
             questionary.Choice(
-                "Z.AI — api.z.ai (international, uses ZHIPU_API_KEY)",
+                "Z.AI — api.z.ai (internasional, menggunakan ZHIPU_API_KEY)",
                 value=("glm", "https://api.z.ai/api/paas/v4/"),
             ),
             questionary.Choice(
-                "BigModel — open.bigmodel.cn (China, uses ZHIPU_CN_API_KEY)",
+                "BigModel — open.bigmodel.cn (China, menggunakan ZHIPU_CN_API_KEY)",
                 value=("glm-cn", "https://open.bigmodel.cn/api/paas/v4/"),
             ),
         ],
@@ -398,14 +398,14 @@ def ask_qwen_region() -> tuple[str, str]:
     (fixes #758). Returns (provider_key, backend_url).
     """
     return questionary.select(
-        "Select Qwen region:",
+        "Pilih wilayah Qwen:",
         choices=[
             questionary.Choice(
-                "International — dashscope-intl.aliyuncs.com (uses DASHSCOPE_API_KEY)",
+                "Internasional — dashscope-intl.aliyuncs.com (menggunakan DASHSCOPE_API_KEY)",
                 value=("qwen", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"),
             ),
             questionary.Choice(
-                "China — dashscope.aliyuncs.com (uses DASHSCOPE_CN_API_KEY)",
+                "China — dashscope.aliyuncs.com (menggunakan DASHSCOPE_CN_API_KEY)",
                 value=("qwen-cn", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
             ),
         ],
@@ -425,14 +425,14 @@ def ask_minimax_region() -> tuple[str, str]:
     (provider_key, backend_url).
     """
     return questionary.select(
-        "Select MiniMax region:",
+        "Pilih wilayah MiniMax:",
         choices=[
             questionary.Choice(
-                "Global — api.minimax.io (uses MINIMAX_API_KEY)",
+                "Global — api.minimax.io (menggunakan MINIMAX_API_KEY)",
                 value=("minimax", "https://api.minimax.io/v1"),
             ),
             questionary.Choice(
-                "China — api.minimaxi.com (uses MINIMAX_CN_API_KEY)",
+                "China — api.minimaxi.com (menggunakan MINIMAX_CN_API_KEY)",
                 value=("minimax-cn", "https://api.minimaxi.com/v1"),
             ),
         ],
@@ -455,22 +455,22 @@ def confirm_ollama_endpoint(url: str) -> None:
     be doing something deliberately unusual (e.g. a reverse-proxy path).
     """
     from_env = os.environ.get("OLLAMA_BASE_URL")
-    origin = " (from OLLAMA_BASE_URL)" if from_env and from_env == url else ""
-    console.print(f"[green]✓ Using Ollama at {url}{origin}[/green]")
+    origin = " (dari OLLAMA_BASE_URL)" if from_env and from_env == url else ""
+    console.print(f"[green]✓ Menggunakan Ollama di {url}{origin}[/green]")
 
     if not url.startswith(("http://", "https://")):
         console.print(
-            f"[yellow]Note: {url!r} is missing a scheme. "
-            f"Ollama-serve typically expects a URL like "
+            f"[yellow]Catatan: {url!r} tidak memiliki skema. "
+            f"Ollama-serve biasanya memerlukan URL seperti "
             f"http://<host>:11434/v1.[/yellow]"
         )
     elif ":11434" not in url and "://localhost" not in url and "://127.0.0.1" not in url:
         # Soft hint when the port differs from the ollama-serve default
         # and the host isn't local (where users sometimes proxy on :80).
         console.print(
-            f"[yellow]Note: {url!r} doesn't include port 11434. "
-            f"Make sure your remote ollama-serve listens on the port "
-            f"shown above.[/yellow]"
+            f"[yellow]Catatan: {url!r} tidak mencakup port 11434. "
+            f"Pastikan ollama-serve remote Anda mendengarkan pada port "
+            f"yang ditampilkan di atas.[/yellow]"
         )
 
 
@@ -494,10 +494,10 @@ def ensure_api_key(provider: str) -> Optional[str]:
         return existing
 
     console.print(
-        f"\n[yellow]{env_var} is not set in your environment.[/yellow]"
+        f"\n[yellow]{env_var} tidak diatur di environment Anda.[/yellow]"
     )
     key = questionary.password(
-        f"Paste your {env_var} (will be saved to .env):",
+        f"Tempel {env_var} Anda (akan disimpan ke .env):",
         style=questionary.Style([
             ("text", "fg:cyan"),
             ("highlighted", "noinherit"),
@@ -505,7 +505,7 @@ def ensure_api_key(provider: str) -> Optional[str]:
     ).ask()
     if not key:
         console.print(
-            f"[red]Skipped. API calls will fail until {env_var} is set.[/red]"
+            f"[red]Dilewati. Panggilan API akan gagal hingga {env_var} diatur.[/red]"
         )
         return None
 
@@ -513,20 +513,21 @@ def ensure_api_key(provider: str) -> Optional[str]:
     Path(env_path).touch(exist_ok=True)
     set_key(env_path, env_var, key)
     os.environ[env_var] = key
-    console.print(f"[green]Saved {env_var} to {env_path}[/green]")
+    console.print(f"[green]Menyimpan {env_var} ke {env_path}[/green]")
     return key
 
 
 def ask_output_language() -> str:
     """Ask for report output language."""
     choice = questionary.select(
-        "Select Output Language:",
+        "Pilih Bahasa Output:",
         choices=[
             questionary.Choice("English (default)", "English"),
             questionary.Choice("Chinese (中文)", "Chinese"),
             questionary.Choice("Japanese (日本語)", "Japanese"),
             questionary.Choice("Korean (한국어)", "Korean"),
             questionary.Choice("Hindi (हिन्दी)", "Hindi"),
+            questionary.Choice("Bahasa Indonesia", "Bahasa Indonesia"),
             questionary.Choice("Spanish (Español)", "Spanish"),
             questionary.Choice("Portuguese (Português)", "Portuguese"),
             questionary.Choice("French (Français)", "French"),
@@ -544,8 +545,8 @@ def ask_output_language() -> str:
 
     if choice == "custom":
         return questionary.text(
-            "Enter language name (e.g. Turkish, Vietnamese, Thai, Indonesian):",
-            validate=lambda x: len(x.strip()) > 0 or "Please enter a language name.",
+            "Masukkan nama bahasa (mis: Turkish, Vietnamese, Thai, Indonesian):",
+            validate=lambda x: len(x.strip()) > 0 or "Harap masukkan nama bahasa.",
         ).ask().strip()
 
     return choice

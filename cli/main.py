@@ -20,14 +20,14 @@ from rich import box
 from rich.align import Align
 from rich.rule import Rule
 
-from tradingagents.graph.trading_graph import TradingAgentsGraph
-from tradingagents.graph.analyst_execution import (
+from tradeyuk.graph.trading_graph import tradeyukGraph
+from tradeyuk.graph.analyst_execution import (
     AnalystWallTimeTracker,
     build_analyst_execution_plan,
     get_initial_analyst_node,
     sync_analyst_tracker_from_chunk,
 )
-from tradingagents.default_config import DEFAULT_CONFIG
+from tradeyuk.default_config import DEFAULT_CONFIG
 from cli.models import AnalystType
 from cli.utils import *
 from cli.announcements import fetch_announcements, display_announcements
@@ -36,8 +36,8 @@ from cli.stats_handler import StatsCallbackHandler
 console = Console()
 
 app = typer.Typer(
-    name="TradingAgents",
-    help="TradingAgents CLI: Multi-Agents LLM Financial Trading Framework",
+    name="tradeyuk",
+    help="Tradeyuk CLI: Framework Trading Finansial Multi-Agen LLM",
     add_completion=True,  # Enable shell completion
 )
 
@@ -46,31 +46,31 @@ app = typer.Typer(
 class MessageBuffer:
     # Fixed teams that always run (not user-selectable)
     FIXED_AGENTS = {
-        "Research Team": ["Bull Researcher", "Bear Researcher", "Research Manager"],
-        "Trading Team": ["Trader"],
-        "Risk Management": ["Aggressive Analyst", "Neutral Analyst", "Conservative Analyst"],
-        "Portfolio Management": ["Portfolio Manager"],
+        "Tim Riset": ["Peneliti Bullish", "Peneliti Bearish", "Manajer Riset"],
+        "Tim Trading": ["Trader"],
+        "Manajemen Risiko": ["Analis Agresif", "Analis Netral", "Analis Konservatif"],
+        "Manajemen Portofolio": ["Manajer Portofolio"],
     }
 
     # Analyst name mapping
     ANALYST_MAPPING = {
-        "market": "Market Analyst",
-        "social": "Sentiment Analyst",
-        "news": "News Analyst",
-        "fundamentals": "Fundamentals Analyst",
+        "market": "Analis Pasar",
+        "social": "Analis Sentimen",
+        "news": "Analis Berita",
+        "fundamentals": "Analis Fundamental",
     }
 
     # Report section mapping: section -> (analyst_key for filtering, finalizing_agent)
     # analyst_key: which analyst selection controls this section (None = always included)
     # finalizing_agent: which agent must be "completed" for this report to count as done
     REPORT_SECTIONS = {
-        "market_report": ("market", "Market Analyst"),
-        "sentiment_report": ("social", "Sentiment Analyst"),
-        "news_report": ("news", "News Analyst"),
-        "fundamentals_report": ("fundamentals", "Fundamentals Analyst"),
-        "investment_plan": (None, "Research Manager"),
+        "market_report": ("market", "Analis Pasar"),
+        "sentiment_report": ("social", "Analis Sentimen"),
+        "news_report": ("news", "Analis Berita"),
+        "fundamentals_report": ("fundamentals", "Analis Fundamental"),
+        "investment_plan": (None, "Manajer Riset"),
         "trader_investment_plan": (None, "Trader"),
-        "final_trade_decision": (None, "Portfolio Manager"),
+        "final_trade_decision": (None, "Manajer Portofolio"),
     }
 
     def __init__(self, max_length=100):
@@ -172,13 +172,13 @@ class MessageBuffer:
         if latest_section and latest_content:
             # Format the current section for display
             section_titles = {
-                "market_report": "Market Analysis",
-                "sentiment_report": "Social Sentiment",
-                "news_report": "News Analysis",
-                "fundamentals_report": "Fundamentals Analysis",
-                "investment_plan": "Research Team Decision",
-                "trader_investment_plan": "Trading Team Plan",
-                "final_trade_decision": "Portfolio Management Decision",
+                "market_report": "Analisis Pasar",
+                "sentiment_report": "Sentimen Sosial",
+                "news_report": "Analisis Berita",
+                "fundamentals_report": "Analisis Fundamental",
+                "investment_plan": "Keputusan Tim Riset",
+                "trader_investment_plan": "Rencana Tim Trading",
+                "final_trade_decision": "Keputusan Manajemen Portofolio",
             }
             self.current_report = (
                 f"### {section_titles[latest_section]}\n{latest_content}"
@@ -193,37 +193,37 @@ class MessageBuffer:
         # Analyst Team Reports - use .get() to handle missing sections
         analyst_sections = ["market_report", "sentiment_report", "news_report", "fundamentals_report"]
         if any(self.report_sections.get(section) for section in analyst_sections):
-            report_parts.append("## Analyst Team Reports")
+            report_parts.append("## Laporan Tim Analis")
             if self.report_sections.get("market_report"):
                 report_parts.append(
-                    f"### Market Analysis\n{self.report_sections['market_report']}"
+                    f"### Analisis Pasar\n{self.report_sections['market_report']}"
                 )
             if self.report_sections.get("sentiment_report"):
                 report_parts.append(
-                    f"### Social Sentiment\n{self.report_sections['sentiment_report']}"
+                    f"### Sentimen Sosial\n{self.report_sections['sentiment_report']}"
                 )
             if self.report_sections.get("news_report"):
                 report_parts.append(
-                    f"### News Analysis\n{self.report_sections['news_report']}"
+                    f"### Analisis Berita\n{self.report_sections['news_report']}"
                 )
             if self.report_sections.get("fundamentals_report"):
                 report_parts.append(
-                    f"### Fundamentals Analysis\n{self.report_sections['fundamentals_report']}"
+                    f"### Analisis Fundamental\n{self.report_sections['fundamentals_report']}"
                 )
 
         # Research Team Reports
         if self.report_sections.get("investment_plan"):
-            report_parts.append("## Research Team Decision")
+            report_parts.append("## Keputusan Tim Riset")
             report_parts.append(f"{self.report_sections['investment_plan']}")
 
         # Trading Team Reports
         if self.report_sections.get("trader_investment_plan"):
-            report_parts.append("## Trading Team Plan")
+            report_parts.append("## Rencana Tim Trading")
             report_parts.append(f"{self.report_sections['trader_investment_plan']}")
 
         # Portfolio Management Decision
         if self.report_sections.get("final_trade_decision"):
-            report_parts.append("## Portfolio Management Decision")
+            report_parts.append("## Keputusan Manajemen Portofolio")
             report_parts.append(f"{self.report_sections['final_trade_decision']}")
 
         self.final_report = "\n\n".join(report_parts) if report_parts else None
@@ -259,13 +259,14 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
     # Header with welcome message
     layout["header"].update(
         Panel(
-            "[bold green]Welcome to TradingAgents CLI[/bold green]\n"
-            "[dim]© [Tauric Research](https://github.com/TauricResearch)[/dim]",
-            title="Welcome to TradingAgents",
+            "[bold green]Selamat Datang di Tradeyuk CLI[/bold green]\n"
+            "[dim]© [Grandzor](https://github.com/Grandzor)[/dim]",
+            title="Selamat Datang di Tradeyuk",
             border_style="green",
             padding=(1, 2),
             expand=True,
         )
+    )
     )
 
     # Progress panel showing agent status
@@ -278,22 +279,29 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
         padding=(0, 2),  # Add horizontal padding
         expand=True,  # Make table expand to fill available space
     )
-    progress_table.add_column("Team", style="cyan", justify="center", width=20)
-    progress_table.add_column("Agent", style="green", justify="center", width=20)
+    status_display_map = {
+        "pending": "menunggu",
+        "in_progress": "sedang berjalan",
+        "completed": "selesai",
+        "error": "error",
+    }
+
+    progress_table.add_column("Tim", style="cyan", justify="center", width=20)
+    progress_table.add_column("Agen", style="green", justify="center", width=20)
     progress_table.add_column("Status", style="yellow", justify="center", width=20)
 
     # Group agents by team - filter to only include agents in agent_status
     all_teams = {
-        "Analyst Team": [
-            "Market Analyst",
-            "Sentiment Analyst",
-            "News Analyst",
-            "Fundamentals Analyst",
+        "Tim Analis": [
+            "Analis Pasar",
+            "Analis Sentimen",
+            "Analis Berita",
+            "Analis Fundamental",
         ],
-        "Research Team": ["Bull Researcher", "Bear Researcher", "Research Manager"],
-        "Trading Team": ["Trader"],
-        "Risk Management": ["Aggressive Analyst", "Neutral Analyst", "Conservative Analyst"],
-        "Portfolio Management": ["Portfolio Manager"],
+        "Tim Riset": ["Peneliti Bullish", "Peneliti Bearish", "Manajer Riset"],
+        "Tim Trading": ["Trader"],
+        "Manajemen Risiko": ["Analis Agresif", "Analis Netral", "Analis Konservatif"],
+        "Manajemen Portofolio": ["Manajer Portofolio"],
     }
 
     # Filter teams to only include agents that are in agent_status
@@ -309,7 +317,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
         status = message_buffer.agent_status.get(first_agent, "pending")
         if status == "in_progress":
             spinner = Spinner(
-                "dots", text="[blue]in_progress[/blue]", style="bold cyan"
+                "dots", text=f"[blue]{status_display_map['in_progress']}[/blue]", style="bold cyan"
             )
             status_cell = spinner
         else:
@@ -318,7 +326,8 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
                 "completed": "green",
                 "error": "red",
             }.get(status, "white")
-            status_cell = f"[{status_color}]{status}[/{status_color}]"
+            display_text = status_display_map.get(status, status)
+            status_cell = f"[{status_color}]{display_text}[/{status_color}]"
         progress_table.add_row(team, first_agent, status_cell)
 
         # Add remaining agents in team
@@ -326,7 +335,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
             status = message_buffer.agent_status.get(agent, "pending")
             if status == "in_progress":
                 spinner = Spinner(
-                    "dots", text="[blue]in_progress[/blue]", style="bold cyan"
+                    "dots", text=f"[blue]{status_display_map['in_progress']}[/blue]", style="bold cyan"
                 )
                 status_cell = spinner
             else:
@@ -335,14 +344,15 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
                     "completed": "green",
                     "error": "red",
                 }.get(status, "white")
-                status_cell = f"[{status_color}]{status}[/{status_color}]"
+                display_text = status_display_map.get(status, status)
+                status_cell = f"[{status_color}]{display_text}[/{status_color}]"
             progress_table.add_row("", agent, status_cell)
 
         # Add horizontal line after each team
         progress_table.add_row("─" * 20, "─" * 20, "─" * 20, style="dim")
 
     layout["progress"].update(
-        Panel(progress_table, title="Progress", border_style="cyan", padding=(1, 2))
+        Panel(progress_table, title="Progres", border_style="cyan", padding=(1, 2))
     )
 
     # Messages panel showing recent messages and tool calls
@@ -360,6 +370,15 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
     messages_table.add_column(
         "Content", style="white", no_wrap=False, ratio=1
     )  # Make content column expand
+
+    type_display = {
+        "User": "Pengguna",
+        "Agent": "Agen",
+        "Data": "Data",
+        "Control": "Kontrol",
+        "System": "Sistem",
+        "Tool": "Alat",
+    }
 
     # Combine tool calls and messages
     all_messages = []
@@ -389,12 +408,13 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
     for timestamp, msg_type, content in recent_messages:
         # Format content with word wrapping
         wrapped_content = Text(content, overflow="fold")
-        messages_table.add_row(timestamp, msg_type, wrapped_content)
+        display_type = type_display.get(msg_type, msg_type)
+        messages_table.add_row(timestamp, display_type, wrapped_content)
 
     layout["messages"].update(
         Panel(
             messages_table,
-            title="Messages & Tools",
+            title="Pesan & Alat",
             border_style="blue",
             padding=(1, 2),
         )
@@ -405,7 +425,7 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
         layout["analysis"].update(
             Panel(
                 Markdown(message_buffer.current_report),
-                title="Current Report",
+                title="Laporan Saat Ini",
                 border_style="green",
                 padding=(1, 2),
             )
@@ -413,8 +433,8 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
     else:
         layout["analysis"].update(
             Panel(
-                "[italic]Waiting for analysis report...[/italic]",
-                title="Current Report",
+                "[italic]Menunggu laporan analisis...[/italic]",
+                title="Laporan Saat Ini",
                 border_style="green",
                 padding=(1, 2),
             )
@@ -432,22 +452,22 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
     reports_total = len(message_buffer.report_sections)
 
     # Build stats parts
-    stats_parts = [f"Agents: {agents_completed}/{agents_total}"]
+    stats_parts = [f"Agen: {agents_completed}/{agents_total}"]
 
     # LLM and tool stats from callback handler
     if stats_handler:
         stats = stats_handler.get_stats()
         stats_parts.append(f"LLM: {stats['llm_calls']}")
-        stats_parts.append(f"Tools: {stats['tool_calls']}")
+        stats_parts.append(f"Alat: {stats['tool_calls']}")
 
         # Token display with graceful fallback
         if stats["tokens_in"] > 0 or stats["tokens_out"] > 0:
-            tokens_str = f"Tokens: {format_tokens(stats['tokens_in'])}\u2191 {format_tokens(stats['tokens_out'])}\u2193"
+            tokens_str = f"Token: {format_tokens(stats['tokens_in'])}\u2191 {format_tokens(stats['tokens_out'])}\u2193"
         else:
-            tokens_str = "Tokens: --"
+            tokens_str = "Token: --"
         stats_parts.append(tokens_str)
 
-    stats_parts.append(f"Reports: {reports_completed}/{reports_total}")
+    stats_parts.append(f"Laporan: {reports_completed}/{reports_total}")
 
     # Elapsed time
     if start_time:
@@ -470,11 +490,11 @@ def get_user_selections():
 
     # Create welcome box content
     welcome_content = f"{welcome_ascii}\n"
-    welcome_content += "[bold green]TradingAgents: Multi-Agents LLM Financial Trading Framework - CLI[/bold green]\n\n"
-    welcome_content += "[bold]Workflow Steps:[/bold]\n"
-    welcome_content += "I. Analyst Team → II. Research Team → III. Trader → IV. Risk Management → V. Portfolio Management\n\n"
+    welcome_content += "[bold green]Tradeyuk: Framework Trading Finansial Multi-Agen LLM - CLI[/bold green]\n\n"
+    welcome_content += "[bold]Langkah Alur Kerja:[/bold]\n"
+    welcome_content += "I. Tim Analis → II. Tim Riset → III. Trader → IV. Manajemen Risiko → V. Manajemen Portofolio\n\n"
     welcome_content += (
-        "[dim]Built by [Tauric Research](https://github.com/TauricResearch)[/dim]"
+        "[dim]Dibangun oleh [Grandzor](https://github.com/Grandzor)[/dim]"
     )
 
     # Create and center the welcome box
@@ -482,8 +502,17 @@ def get_user_selections():
         welcome_content,
         border_style="green",
         padding=(1, 2),
-        title="Welcome to TradingAgents",
-        subtitle="Multi-Agents LLM Financial Trading Framework",
+        title="Selamat Datang di Tradeyuk",
+        subtitle="Framework Trading Finansial Multi-Agen LLM",
+    )
+
+    # Create and center the welcome box
+    welcome_box = Panel(
+        welcome_content,
+        border_style="green",
+        padding=(1, 2),
+        title="Selamat Datang di Tradeyuk",
+        subtitle="Framework Trading Finansial Multi-Agen LLM",
     )
     console.print(Align.center(welcome_box))
     console.print()
@@ -504,23 +533,23 @@ def get_user_selections():
     # Step 1: Ticker symbol
     console.print(
         create_question_box(
-            "Step 1: Ticker Symbol",
-            "Enter the exact ticker symbol to analyze, including exchange suffix when needed (examples: SPY, CNC.TO, 7203.T, 0700.HK)",
+            "Langkah 1: Simbol Ticker",
+            "Masukkan simbol ticker yang tepat untuk dianalisis, termasuk akhiran bursa jika diperlukan (contoh: SPY, CNC.TO, 7203.T, 0700.HK)",
             "SPY",
         )
     )
     selected_ticker = get_ticker()
     asset_type = detect_asset_type(selected_ticker)
     console.print(
-        f"[green]Detected asset type:[/green] {asset_type.value}"
+        f"[green]Tipe aset terdeteksi:[/green] {asset_type.value}"
     )
 
     # Step 2: Analysis date
     default_date = datetime.datetime.now().strftime("%Y-%m-%d")
     console.print(
         create_question_box(
-            "Step 2: Analysis Date",
-            "Enter the analysis date (YYYY-MM-DD)",
+            "Langkah 2: Tanggal Analisis",
+            "Masukkan tanggal analisis (YYYY-MM-DD)",
             default_date,
         )
     )
@@ -529,8 +558,8 @@ def get_user_selections():
     # Step 3: Output language
     console.print(
         create_question_box(
-            "Step 3: Output Language",
-            "Select the language for analyst reports and final decision"
+            "Langkah 3: Bahasa Output",
+            "Pilih bahasa untuk laporan analis dan keputusan akhir"
         )
     )
     output_language = ask_output_language()
@@ -538,18 +567,18 @@ def get_user_selections():
     # Step 4: Select analysts
     console.print(
         create_question_box(
-            "Step 4: Analysts Team", "Select your LLM analyst agents for the analysis"
+            "Langkah 4: Tim Analis", "Pilih agen analis LLM Anda untuk analisis"
         )
     )
     selected_analysts = select_analysts(asset_type)
     console.print(
-        f"[green]Selected analysts:[/green] {', '.join(analyst.value for analyst in selected_analysts)}"
+        f"[green]Analis dipilih:[/green] {', '.join(analyst.value for analyst in selected_analysts)}"
     )
 
     # Step 5: Research depth
     console.print(
         create_question_box(
-            "Step 5: Research Depth", "Select your research depth level"
+            "Langkah 5: Kedalaman Riset", "Pilih tingkat kedalaman riset Anda"
         )
     )
     selected_research_depth = select_research_depth()
@@ -557,7 +586,7 @@ def get_user_selections():
     # Step 6: LLM Provider
     console.print(
         create_question_box(
-            "Step 6: LLM Provider", "Select your LLM provider"
+            "Langkah 6: Penyedia LLM", "Pilih penyedia LLM Anda"
         )
     )
     selected_llm_provider, backend_url = select_llm_provider()
@@ -585,7 +614,7 @@ def get_user_selections():
     # Step 7: Thinking agents
     console.print(
         create_question_box(
-            "Step 7: Thinking Agents", "Select your thinking agents for analysis"
+            "Langkah 7: Agen Pemikir", "Pilih agen pemikir Anda untuk analisis"
         )
     )
     selected_shallow_thinker = select_shallow_thinking_agent(selected_llm_provider)
@@ -600,24 +629,24 @@ def get_user_selections():
     if provider_lower == "google":
         console.print(
             create_question_box(
-                "Step 8: Thinking Mode",
-                "Configure Gemini thinking mode"
+                "Langkah 8: Mode Berpikir",
+                "Konfigurasikan mode berpikir Gemini"
             )
         )
         thinking_level = ask_gemini_thinking_config()
     elif provider_lower == "openai":
         console.print(
             create_question_box(
-                "Step 8: Reasoning Effort",
-                "Configure OpenAI reasoning effort level"
+                "Langkah 8: Tingkat Penalaran",
+                "Konfigurasikan tingkat penalaran OpenAI"
             )
         )
         reasoning_effort = ask_openai_reasoning_effort()
     elif provider_lower == "anthropic":
         console.print(
             create_question_box(
-                "Step 8: Effort Level",
-                "Configure Claude effort level"
+                "Langkah 8: Tingkat Upaya",
+                "Konfigurasikan tingkat upaya Claude"
             )
         )
         anthropic_effort = ask_anthropic_effort()
@@ -652,11 +681,11 @@ def get_ticker():
                 and len(value.strip()) <= 32
             )
         )
-        or "Please enter a valid ticker symbol, e.g. AAPL, 000404.SZ, 0700.HK.",
+        or "Harap masukkan simbol ticker yang valid, mis: AAPL, 000404.SZ, 0700.HK.",
     ).ask()
 
     if ticker is None:
-        console.print("\n[red]No ticker symbol provided. Exiting...[/red]")
+        console.print("\n[red]Tidak ada simbol ticker yang diberikan. Keluar...[/red]")
         raise typer.Exit(1)
 
     return (ticker.strip() or "SPY").upper()
@@ -672,12 +701,12 @@ def get_analysis_date():
             # Validate date format and ensure it's not in the future
             analysis_date = datetime.datetime.strptime(date_str, "%Y-%m-%d")
             if analysis_date.date() > datetime.datetime.now().date():
-                console.print("[red]Error: Analysis date cannot be in the future[/red]")
+                console.print("[red]Error: Tanggal analisis tidak boleh di masa depan[/red]")
                 continue
             return date_str
         except ValueError:
             console.print(
-                "[red]Error: Invalid date format. Please use YYYY-MM-DD[/red]"
+                "[red]Error: Format tanggal tidak valid. Harap gunakan YYYY-MM-DD[/red]"
             )
 
 
@@ -692,22 +721,22 @@ def save_report_to_disk(final_state, ticker: str, save_path: Path):
     if final_state.get("market_report"):
         analysts_dir.mkdir(exist_ok=True)
         (analysts_dir / "market.md").write_text(final_state["market_report"], encoding="utf-8")
-        analyst_parts.append(("Market Analyst", final_state["market_report"]))
+        analyst_parts.append(("Analis Pasar", final_state["market_report"]))
     if final_state.get("sentiment_report"):
         analysts_dir.mkdir(exist_ok=True)
         (analysts_dir / "sentiment.md").write_text(final_state["sentiment_report"], encoding="utf-8")
-        analyst_parts.append(("Sentiment Analyst", final_state["sentiment_report"]))
+        analyst_parts.append(("Analis Sentimen", final_state["sentiment_report"]))
     if final_state.get("news_report"):
         analysts_dir.mkdir(exist_ok=True)
         (analysts_dir / "news.md").write_text(final_state["news_report"], encoding="utf-8")
-        analyst_parts.append(("News Analyst", final_state["news_report"]))
+        analyst_parts.append(("Analis Berita", final_state["news_report"]))
     if final_state.get("fundamentals_report"):
         analysts_dir.mkdir(exist_ok=True)
         (analysts_dir / "fundamentals.md").write_text(final_state["fundamentals_report"], encoding="utf-8")
-        analyst_parts.append(("Fundamentals Analyst", final_state["fundamentals_report"]))
+        analyst_parts.append(("Analis Fundamental", final_state["fundamentals_report"]))
     if analyst_parts:
         content = "\n\n".join(f"### {name}\n{text}" for name, text in analyst_parts)
-        sections.append(f"## I. Analyst Team Reports\n\n{content}")
+        sections.append(f"## I. Laporan Tim Analis\n\n{content}")
 
     # 2. Research
     if final_state.get("investment_debate_state"):
@@ -717,25 +746,25 @@ def save_report_to_disk(final_state, ticker: str, save_path: Path):
         if debate.get("bull_history"):
             research_dir.mkdir(exist_ok=True)
             (research_dir / "bull.md").write_text(debate["bull_history"], encoding="utf-8")
-            research_parts.append(("Bull Researcher", debate["bull_history"]))
+            research_parts.append(("Peneliti Bullish", debate["bull_history"]))
         if debate.get("bear_history"):
             research_dir.mkdir(exist_ok=True)
             (research_dir / "bear.md").write_text(debate["bear_history"], encoding="utf-8")
-            research_parts.append(("Bear Researcher", debate["bear_history"]))
+            research_parts.append(("Peneliti Bearish", debate["bear_history"]))
         if debate.get("judge_decision"):
             research_dir.mkdir(exist_ok=True)
             (research_dir / "manager.md").write_text(debate["judge_decision"], encoding="utf-8")
-            research_parts.append(("Research Manager", debate["judge_decision"]))
+            research_parts.append(("Manajer Riset", debate["judge_decision"]))
         if research_parts:
             content = "\n\n".join(f"### {name}\n{text}" for name, text in research_parts)
-            sections.append(f"## II. Research Team Decision\n\n{content}")
+            sections.append(f"## II. Keputusan Tim Riset\n\n{content}")
 
     # 3. Trading
     if final_state.get("trader_investment_plan"):
         trading_dir = save_path / "3_trading"
         trading_dir.mkdir(exist_ok=True)
         (trading_dir / "trader.md").write_text(final_state["trader_investment_plan"], encoding="utf-8")
-        sections.append(f"## III. Trading Team Plan\n\n### Trader\n{final_state['trader_investment_plan']}")
+        sections.append(f"## III. Rencana Tim Trading\n\n### Trader\n{final_state['trader_investment_plan']}")
 
     # 4. Risk Management
     if final_state.get("risk_debate_state"):
@@ -745,28 +774,28 @@ def save_report_to_disk(final_state, ticker: str, save_path: Path):
         if risk.get("aggressive_history"):
             risk_dir.mkdir(exist_ok=True)
             (risk_dir / "aggressive.md").write_text(risk["aggressive_history"], encoding="utf-8")
-            risk_parts.append(("Aggressive Analyst", risk["aggressive_history"]))
+            risk_parts.append(("Analis Agresif", risk["aggressive_history"]))
         if risk.get("conservative_history"):
             risk_dir.mkdir(exist_ok=True)
             (risk_dir / "conservative.md").write_text(risk["conservative_history"], encoding="utf-8")
-            risk_parts.append(("Conservative Analyst", risk["conservative_history"]))
+            risk_parts.append(("Analis Konservatif", risk["conservative_history"]))
         if risk.get("neutral_history"):
             risk_dir.mkdir(exist_ok=True)
             (risk_dir / "neutral.md").write_text(risk["neutral_history"], encoding="utf-8")
-            risk_parts.append(("Neutral Analyst", risk["neutral_history"]))
+            risk_parts.append(("Analis Netral", risk["neutral_history"]))
         if risk_parts:
             content = "\n\n".join(f"### {name}\n{text}" for name, text in risk_parts)
-            sections.append(f"## IV. Risk Management Team Decision\n\n{content}")
+            sections.append(f"## IV. Keputusan Manajemen Risiko\n\n{content}")
 
         # 5. Portfolio Manager
         if risk.get("judge_decision"):
             portfolio_dir = save_path / "5_portfolio"
             portfolio_dir.mkdir(exist_ok=True)
             (portfolio_dir / "decision.md").write_text(risk["judge_decision"], encoding="utf-8")
-            sections.append(f"## V. Portfolio Manager Decision\n\n### Portfolio Manager\n{risk['judge_decision']}")
+            sections.append(f"## V. Keputusan Manajer Portofolio\n\n### Manajer Portofolio\n{risk['judge_decision']}")
 
     # Write consolidated report
-    header = f"# Trading Analysis Report: {ticker}\n\nGenerated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+    header = f"# Laporan Analisis Trading: {ticker}\n\nDibuat: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
     (save_path / "complete_report.md").write_text(header + "\n\n".join(sections), encoding="utf-8")
     return save_path / "complete_report.md"
 
@@ -774,20 +803,20 @@ def save_report_to_disk(final_state, ticker: str, save_path: Path):
 def display_complete_report(final_state):
     """Display the complete analysis report sequentially (avoids truncation)."""
     console.print()
-    console.print(Rule("Complete Analysis Report", style="bold green"))
+    console.print(Rule("Laporan Analisis Lengkap", style="bold green"))
 
     # I. Analyst Team Reports
     analysts = []
     if final_state.get("market_report"):
-        analysts.append(("Market Analyst", final_state["market_report"]))
+        analysts.append(("Analis Pasar", final_state["market_report"]))
     if final_state.get("sentiment_report"):
-        analysts.append(("Sentiment Analyst", final_state["sentiment_report"]))
+        analysts.append(("Analis Sentimen", final_state["sentiment_report"]))
     if final_state.get("news_report"):
-        analysts.append(("News Analyst", final_state["news_report"]))
+        analysts.append(("Analis Berita", final_state["news_report"]))
     if final_state.get("fundamentals_report"):
-        analysts.append(("Fundamentals Analyst", final_state["fundamentals_report"]))
+        analysts.append(("Analis Fundamental", final_state["fundamentals_report"]))
     if analysts:
-        console.print(Panel("[bold]I. Analyst Team Reports[/bold]", border_style="cyan"))
+        console.print(Panel("[bold]I. Laporan Tim Analis[/bold]", border_style="cyan"))
         for title, content in analysts:
             console.print(Panel(Markdown(content), title=title, border_style="blue", padding=(1, 2)))
 
@@ -796,19 +825,19 @@ def display_complete_report(final_state):
         debate = final_state["investment_debate_state"]
         research = []
         if debate.get("bull_history"):
-            research.append(("Bull Researcher", debate["bull_history"]))
+            research.append(("Peneliti Bullish", debate["bull_history"]))
         if debate.get("bear_history"):
-            research.append(("Bear Researcher", debate["bear_history"]))
+            research.append(("Peneliti Bearish", debate["bear_history"]))
         if debate.get("judge_decision"):
-            research.append(("Research Manager", debate["judge_decision"]))
+            research.append(("Manajer Riset", debate["judge_decision"]))
         if research:
-            console.print(Panel("[bold]II. Research Team Decision[/bold]", border_style="magenta"))
+            console.print(Panel("[bold]II. Keputusan Tim Riset[/bold]", border_style="magenta"))
             for title, content in research:
                 console.print(Panel(Markdown(content), title=title, border_style="blue", padding=(1, 2)))
 
     # III. Trading Team
     if final_state.get("trader_investment_plan"):
-        console.print(Panel("[bold]III. Trading Team Plan[/bold]", border_style="yellow"))
+        console.print(Panel("[bold]III. Rencana Tim Trading[/bold]", border_style="yellow"))
         console.print(Panel(Markdown(final_state["trader_investment_plan"]), title="Trader", border_style="blue", padding=(1, 2)))
 
     # IV. Risk Management Team
@@ -816,36 +845,38 @@ def display_complete_report(final_state):
         risk = final_state["risk_debate_state"]
         risk_reports = []
         if risk.get("aggressive_history"):
-            risk_reports.append(("Aggressive Analyst", risk["aggressive_history"]))
+            risk_reports.append(("Analis Agresif", risk["aggressive_history"]))
         if risk.get("conservative_history"):
-            risk_reports.append(("Conservative Analyst", risk["conservative_history"]))
+            risk_reports.append(("Analis Konservatif", risk["conservative_history"]))
         if risk.get("neutral_history"):
-            risk_reports.append(("Neutral Analyst", risk["neutral_history"]))
+            risk_reports.append(("Analis Netral", risk["neutral_history"]))
         if risk_reports:
-            console.print(Panel("[bold]IV. Risk Management Team Decision[/bold]", border_style="red"))
+            console.print(Panel("[bold]IV. Keputusan Manajemen Risiko[/bold]", border_style="red"))
             for title, content in risk_reports:
                 console.print(Panel(Markdown(content), title=title, border_style="blue", padding=(1, 2)))
 
         # V. Portfolio Manager Decision
         if risk.get("judge_decision"):
-            console.print(Panel("[bold]V. Portfolio Manager Decision[/bold]", border_style="green"))
-            console.print(Panel(Markdown(risk["judge_decision"]), title="Portfolio Manager", border_style="blue", padding=(1, 2)))
+            console.print(Panel("[bold]V. Keputusan Manajer Portofolio[/bold]", border_style="green"))
+            console.print(Panel(Markdown(risk["judge_decision"]), title="Manajer Portofolio", border_style="blue", padding=(1, 2)))
 
 
 def update_research_team_status(status):
     """Update status for research team members (not Trader)."""
-    research_team = ["Bull Researcher", "Bear Researcher", "Research Manager"]
+    research_team = ["Peneliti Bullish", "Peneliti Bearish", "Manajer Riset"]
     for agent in research_team:
         message_buffer.update_agent_status(agent, status)
 
 
-# Ordered list of analysts for status transitions
+
+
+
 ANALYST_ORDER = ["market", "social", "news", "fundamentals"]
 ANALYST_AGENT_NAMES = {
-    "market": "Market Analyst",
-    "social": "Sentiment Analyst",
-    "news": "News Analyst",
-    "fundamentals": "Fundamentals Analyst",
+    "market": "Analis Pasar",
+    "social": "Analis Sentimen",
+    "news": "Analis Berita",
+    "fundamentals": "Analis Fundamental",
 }
 ANALYST_REPORT_MAP = {
     "market": "market_report",
@@ -896,8 +927,8 @@ def update_analyst_statuses(message_buffer, chunk, wall_time_tracker=None):
 
     # When all analysts complete, transition research team to in_progress
     if not found_active and selected:
-        if message_buffer.agent_status.get("Bull Researcher") == "pending":
-            message_buffer.update_agent_status("Bull Researcher", "in_progress")
+        if message_buffer.agent_status.get("Peneliti Bullish") == "pending":
+            message_buffer.update_agent_status("Peneliti Bullish", "in_progress")
 
 def extract_content_string(content):
     """Extract string content from various message formats.
@@ -1006,7 +1037,7 @@ def run_analysis(checkpoint: bool = False):
     analyst_wall_time_tracker = AnalystWallTimeTracker(analyst_execution_plan)
 
     # Initialize the graph with callbacks bound to LLMs
-    graph = TradingAgentsGraph(
+    graph = TradeyukGraph(
         selected_analyst_keys,
         config=config,
         debug=True,
@@ -1075,14 +1106,14 @@ def run_analysis(checkpoint: bool = False):
         update_display(layout, stats_handler=stats_handler, start_time=start_time)
 
         # Add initial messages
-        message_buffer.add_message("System", f"Selected ticker: {selections['ticker']}")
-        message_buffer.add_message("System", f"Detected asset type: {selections['asset_type']}")
+        message_buffer.add_message("System", f"Ticker dipilih: {selections['ticker']}")
+        message_buffer.add_message("System", f"Tipe aset terdeteksi: {selections['asset_type']}")
         message_buffer.add_message(
-            "System", f"Analysis date: {selections['analysis_date']}"
+            "System", f"Tanggal analisis: {selections['analysis_date']}"
         )
         message_buffer.add_message(
             "System",
-            f"Selected analysts: {', '.join(analyst.value for analyst in selections['analysts'])}",
+            f"Analis dipilih: {', '.join(analyst.value for analyst in selections['analysts'])}",
         )
         update_display(layout, stats_handler=stats_handler, start_time=start_time)
 
@@ -1094,7 +1125,7 @@ def run_analysis(checkpoint: bool = False):
 
         # Create spinner text
         spinner_text = (
-            f"Analyzing {selections['ticker']} on {selections['analysis_date']}..."
+            f"Menganalisis {selections['ticker']} pada {selections['analysis_date']}..."
         )
         update_display(layout, spinner_text, stats_handler=stats_handler, start_time=start_time)
 
@@ -1149,15 +1180,15 @@ def run_analysis(checkpoint: bool = False):
                     update_research_team_status("in_progress")
                 if bull_hist:
                     message_buffer.update_report_section(
-                        "investment_plan", f"### Bull Researcher Analysis\n{bull_hist}"
+                        "investment_plan", f"### Analisis Peneliti Bullish\n{bull_hist}"
                     )
                 if bear_hist:
                     message_buffer.update_report_section(
-                        "investment_plan", f"### Bear Researcher Analysis\n{bear_hist}"
+                        "investment_plan", f"### Analisis Peneliti Bearish\n{bear_hist}"
                     )
                 if judge:
                     message_buffer.update_report_section(
-                        "investment_plan", f"### Research Manager Decision\n{judge}"
+                        "investment_plan", f"### Keputusan Manajer Riset\n{judge}"
                     )
                     update_research_team_status("completed")
                     message_buffer.update_agent_status("Trader", "in_progress")
@@ -1169,7 +1200,7 @@ def run_analysis(checkpoint: bool = False):
                 )
                 if message_buffer.agent_status.get("Trader") != "completed":
                     message_buffer.update_agent_status("Trader", "completed")
-                    message_buffer.update_agent_status("Aggressive Analyst", "in_progress")
+                    message_buffer.update_agent_status("Analis Agresif", "in_progress")
 
             # Risk Management Team - Handle Risk Debate State
             if chunk.get("risk_debate_state"):
@@ -1180,33 +1211,33 @@ def run_analysis(checkpoint: bool = False):
                 judge = risk_state.get("judge_decision", "").strip()
 
                 if agg_hist:
-                    if message_buffer.agent_status.get("Aggressive Analyst") != "completed":
-                        message_buffer.update_agent_status("Aggressive Analyst", "in_progress")
+                    if message_buffer.agent_status.get("Analis Agresif") != "completed":
+                        message_buffer.update_agent_status("Analis Agresif", "in_progress")
                     message_buffer.update_report_section(
-                        "final_trade_decision", f"### Aggressive Analyst Analysis\n{agg_hist}"
+                        "final_trade_decision", f"### Analisis Analis Agresif\n{agg_hist}"
                     )
                 if con_hist:
-                    if message_buffer.agent_status.get("Conservative Analyst") != "completed":
-                        message_buffer.update_agent_status("Conservative Analyst", "in_progress")
+                    if message_buffer.agent_status.get("Analis Konservatif") != "completed":
+                        message_buffer.update_agent_status("Analis Konservatif", "in_progress")
                     message_buffer.update_report_section(
-                        "final_trade_decision", f"### Conservative Analyst Analysis\n{con_hist}"
+                        "final_trade_decision", f"### Analisis Analis Konservatif\n{con_hist}"
                     )
                 if neu_hist:
-                    if message_buffer.agent_status.get("Neutral Analyst") != "completed":
-                        message_buffer.update_agent_status("Neutral Analyst", "in_progress")
+                    if message_buffer.agent_status.get("Analis Netral") != "completed":
+                        message_buffer.update_agent_status("Analis Netral", "in_progress")
                     message_buffer.update_report_section(
-                        "final_trade_decision", f"### Neutral Analyst Analysis\n{neu_hist}"
+                        "final_trade_decision", f"### Analisis Analis Netral\n{neu_hist}"
                     )
                 if judge:
-                    if message_buffer.agent_status.get("Portfolio Manager") != "completed":
-                        message_buffer.update_agent_status("Portfolio Manager", "in_progress")
+                    if message_buffer.agent_status.get("Manajer Portofolio") != "completed":
+                        message_buffer.update_agent_status("Manajer Portofolio", "in_progress")
                         message_buffer.update_report_section(
-                            "final_trade_decision", f"### Portfolio Manager Decision\n{judge}"
+                            "final_trade_decision", f"### Keputusan Manajer Portofolio\n{judge}"
                         )
-                        message_buffer.update_agent_status("Aggressive Analyst", "completed")
-                        message_buffer.update_agent_status("Conservative Analyst", "completed")
-                        message_buffer.update_agent_status("Neutral Analyst", "completed")
-                        message_buffer.update_agent_status("Portfolio Manager", "completed")
+                        message_buffer.update_agent_status("Analis Agresif", "completed")
+                        message_buffer.update_agent_status("Analis Konservatif", "completed")
+                        message_buffer.update_agent_status("Analis Netral", "completed")
+                        message_buffer.update_agent_status("Manajer Portofolio", "completed")
 
             # Update the display
             update_display(layout, stats_handler=stats_handler, start_time=start_time)
@@ -1225,7 +1256,7 @@ def run_analysis(checkpoint: bool = False):
             message_buffer.update_agent_status(agent, "completed")
 
         message_buffer.add_message(
-            "System", f"Completed analysis for {selections['analysis_date']}"
+            "System", f"Analisis selesai untuk {selections['analysis_date']}"
         )
         message_buffer.add_message("System", analyst_wall_time_tracker.format_summary())
 
@@ -1237,28 +1268,28 @@ def run_analysis(checkpoint: bool = False):
         update_display(layout, stats_handler=stats_handler, start_time=start_time)
 
     # Post-analysis prompts (outside Live context for clean interaction)
-    console.print("\n[bold cyan]Analysis Complete![/bold cyan]\n")
+    console.print("\n[bold cyan]Analisis Selesai![/bold cyan]\n")
     console.print(f"[dim]{analyst_wall_time_tracker.format_summary()}[/dim]")
 
     # Prompt to save report
-    save_choice = typer.prompt("Save report?", default="Y").strip().upper()
+    save_choice = typer.prompt("Simpan laporan?", default="Y").strip().upper()
     if save_choice in ("Y", "YES", ""):
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         default_path = Path.cwd() / "reports" / f"{selections['ticker']}_{timestamp}"
         save_path_str = typer.prompt(
-            "Save path (press Enter for default)",
+            "Path penyimpanan (tekan Enter untuk default)",
             default=str(default_path)
         ).strip()
         save_path = Path(save_path_str)
         try:
             report_file = save_report_to_disk(final_state, selections["ticker"], save_path)
-            console.print(f"\n[green]✓ Report saved to:[/green] {save_path.resolve()}")
-            console.print(f"  [dim]Complete report:[/dim] {report_file.name}")
+            console.print(f"\n[green]✓ Laporan disimpan ke:[/green] {save_path.resolve()}")
+            console.print(f"  [dim]Laporan lengkap:[/dim] {report_file.name}")
         except Exception as e:
-            console.print(f"[red]Error saving report: {e}[/red]")
+            console.print(f"[red]Error menyimpan laporan: {e}[/red]")
 
     # Prompt to display full report
-    display_choice = typer.prompt("\nDisplay full report on screen?", default="Y").strip().upper()
+    display_choice = typer.prompt("\nTampilkan laporan lengkap di layar?", default="Y").strip().upper()
     if display_choice in ("Y", "YES", ""):
         display_complete_report(final_state)
 
@@ -1268,18 +1299,18 @@ def analyze(
     checkpoint: bool = typer.Option(
         False,
         "--checkpoint",
-        help="Enable checkpoint/resume: save state after each node so a crashed run can resume.",
+        help="Aktifkan checkpoint/resume: simpan status setelah setiap node agar proses yang gagal dapat dilanjutkan.",
     ),
     clear_checkpoints: bool = typer.Option(
         False,
         "--clear-checkpoints",
-        help="Delete all saved checkpoints before running (force fresh start).",
+        help="Hapus semua checkpoint tersimpan sebelum menjalankan (memaksa mulai baru).",
     ),
 ):
     if clear_checkpoints:
-        from tradingagents.graph.checkpointer import clear_all_checkpoints
+        from tradeyuk.graph.checkpointer import clear_all_checkpoints
         n = clear_all_checkpoints(DEFAULT_CONFIG["data_cache_dir"])
-        console.print(f"[yellow]Cleared {n} checkpoint(s).[/yellow]")
+        console.print(f"[yellow]Membersihkan {n} checkpoint.[/yellow]")
     run_analysis(checkpoint=checkpoint)
 
 
