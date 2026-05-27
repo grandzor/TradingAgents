@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Tradeyuk - Analisis {{ ticker }}{% endblock %}
+{% block content %}
+
+{% set run_param = request.query_params.get('run', '') %}
+
+<div class="container">
+    <div style="margin-bottom:1.5rem;">
+        <a href="/" style="color:var(--text-muted);font-size:0.85rem;">&larr; Kembali ke Beranda</a>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+        <div>
+            <h1 style="font-size:1.5rem;font-weight:700;">Analisis {{ ticker }}</h1>
+            <p style="color:var(--text-secondary);font-size:0.9rem;">Tanggal: {{ date }} &middot; Tipe: {{ asset_type }}</p>
+        </div>
+        <div>
+            <span id="rating-badge" class="rating-badge hold">Menunggu</span>
+        </div>
+    </div>
+
+    {% if run_param == '1' %}
+    <div id="analysis-status" style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:0.5rem;">
+        Mempersiapkan analisis...
+    </div>
+    <div class="progress-bar">
+        <div id="progress-bar-fill" class="progress-bar-fill" style="width:0%;"></div>
+    </div>
+    {% endif %}
+
+    <div id="analysis-stream" data-ticker="{{ ticker }}" data-date="{{ date }}" data-asset-type="{{ asset_type }}">
+        {% for field in ['market_report', 'sentiment_report', 'news_report', 'fundamentals_report', 'investment_plan', 'trader_investment_plan', 'final_trade_decision'] %}
+        <div class="section" id="section-{{ field }}" style="display:{% if run_param == '1' %}block{% else %}none{% endif %}">
+            <div class="section-header">
+                <span class="arrow">&#9654;</span>
+                <span>
+                    {% if field == 'market_report' %}Analisis Pasar
+                    {% elif field == 'sentiment_report' %}Analisis Sentimen
+                    {% elif field == 'news_report' %}Analisis Berita
+                    {% elif field == 'fundamentals_report' %}Analisis Fundamental
+                    {% elif field == 'investment_plan' %}Keputusan Tim Riset
+                    {% elif field == 'trader_investment_plan' %}Rencana Tim Trading
+                    {% else %}Keputusan Manajemen Portofolio
+                    {% endif %}
+                </span>
+            </div>
+            <div class="section-body">
+                <div class="section-content"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="analysis-result" style="display:none;margin-top:1.5rem;">
+        <a href="/history" class="btn btn-outline btn-sm">Lihat Riwayat Analisis</a>
+    </div>
+</div>
+
+<div id="loading-overlay" class="loading-overlay active" style="flex-direction:column;">
+    <div class="spinner"></div>
+    <div class="loading-text">Menganalisis {{ ticker }}...</div>
+</div>
+
+{% endblock %}

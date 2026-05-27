@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Tradeyuk - Riwayat Analisis{% endblock %}
+{% block content %}
+
+<div class="container">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+        <div>
+            <h1 style="font-size:1.5rem;font-weight:700;">Riwayat Analisis</h1>
+            <p style="color:var(--text-secondary);font-size:0.9rem;">Analisis sebelumnya yang tersimpan di ~/.tradeyuk/logs</p>
+        </div>
+        <a href="/" class="btn btn-primary btn-sm">Analisis Baru</a>
+    </div>
+
+    {% if entries %}
+    <div class="card" style="padding:0;">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Tanggal</th>
+                        <th>Keputusan</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                    <tr>
+                        <td><strong>{{ entry.ticker }}</strong></td>
+                        <td style="font-family:var(--font-mono);font-size:0.85rem;">{{ entry.date }}</td>
+                        <td><span class="rating-badge {{ entry.rating.class }}">{{ entry.rating.label }}</span></td>
+                        <td>
+                            <a href="/analyze/{{ entry.ticker }}/{{ entry.date }}" class="btn btn-outline btn-sm">Lihat</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="text-align:center;padding:3rem 1rem;">
+        <p style="color:var(--text-muted);font-size:1.1rem;">Belum ada riwayat analisis.</p>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-top:0.5rem;">Jalankan analisis pertama Anda dari Beranda.</p>
+        <a href="/" class="btn btn-primary" style="margin-top:1rem;">Mulai Analisis</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

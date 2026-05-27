@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Tradeyuk - Harga Pasar{% endblock %}
+{% block content %}
+
+<div class="container">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;">
+        <h1 style="font-size:1.5rem;font-weight:700;">Harga Pasar Langsung</h1>
+    </div>
+
+    <div id="auto-refresh" class="auto-refresh-bar">
+        <span>Pembaruan otomatis setiap <strong>30 detik</strong></span>
+        <span>Memperbarui dalam <span id="refresh-countdown" class="countdown">30d</span></span>
+        <button id="refresh-btn" class="btn btn-outline btn-sm">Segarkan Sekarang</button>
+    </div>
+
+    <!-- ANTAM Section -->
+    <h2 style="font-size:1.05rem;color:var(--text-secondary);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Logam Mulia</h2>
+    <div id="antam-grid" class="grid-2" style="margin-bottom:2rem;">
+        <div class="price-card">
+            <div class="name">Memuat...</div>
+            <div class="value">—</div>
+        </div>
+        <div class="price-card">
+            <div class="name">Memuat...</div>
+            <div class="value">—</div>
+        </div>
+    </div>
+
+    <!-- Crypto Section -->
+    <h2 style="font-size:1.05rem;color:var(--text-secondary);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Kripto (Indodax)</h2>
+    <div id="crypto-grid" class="grid-3" style="margin-bottom:2rem;">
+        <div class="price-card">
+            <div class="name">Memuat...</div>
+            <div class="value">—</div>
+        </div>
+    </div>
+
+    <!-- IDX Section -->
+    <h2 style="font-size:1.05rem;color:var(--text-secondary);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Bursa Efek Indonesia (IDX)</h2>
+    <div class="card" style="padding:0;">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Kode</th>
+                        <th>Harga</th>
+                    </tr>
+                </thead>
+                <tbody id="idx-table-body">
+                    <tr><td colspan="3" style="text-align:center;color:var(--text-muted);">Memuat data IDX...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="margin-top:1.5rem;color:var(--text-muted);font-size:0.8rem;">
+        <p><strong>Catatan:</strong> Harga logam mulia menggunakan data futures global (GC=F, SI=F) sebagai proksi karena API Logam Mulia tidak tersedia secara publik. Harga ditampilkan dalam Rupiah dengan kurs estimasi Rp16.500/USD. Data kripto bersumber dari API publik Indodax. Data IDX bersumber dari Yahoo Finance.</p>
+    </div>
+</div>
+
+{% endblock %}

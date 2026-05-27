@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Tradeyuk - Dashboard{% endblock %}
+{% block content %}
+
+<section class="hero">
+    <h1>Tradeyuk</h1>
+    <p>Framework Trading Finansial Multi-Agen LLM &mdash; Analisis pasar, riset investasi, dan keputusan portofolio didukung kecerdasan buatan.</p>
+</section>
+
+<div class="container">
+    <!-- Market Overview -->
+    <h2 style="font-size:1.1rem;color:var(--text-secondary);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Pantauan Pasar</h2>
+    <div class="grid-4" style="margin-bottom:2rem;">
+        <div class="card ticker-card" data-ticker="^JKSE">
+            <div class="card-header">
+                <span class="card-title">Indeks IHSG</span>
+            </div>
+            <div class="card-value">—</div>
+            <div class="card-change" style="font-size:0.75rem;color:var(--text-muted);">IDX Composite</div>
+        </div>
+        <div class="card ticker-card" data-ticker="GOLD">
+            <div class="card-header">
+                <span class="card-title">Emas (Proksi GC=F)</span>
+            </div>
+            <div class="card-value">—</div>
+            <div class="card-change" style="font-size:0.75rem;color:var(--text-muted);">per troy ounce &times; Rp16.500</div>
+        </div>
+        <div class="card ticker-card" data-ticker="BTC_IDR">
+            <div class="card-header">
+                <span class="card-title">Bitcoin (IDR)</span>
+            </div>
+            <div class="card-value">—</div>
+            <div class="card-change" style="font-size:0.75rem;color:var(--text-muted);">Indodax</div>
+        </div>
+        <div class="card ticker-card" data-ticker="USDIDR=X">
+            <div class="card-header">
+                <span class="card-title">USD / IDR</span>
+            </div>
+            <div class="card-value">—</div>
+            <div class="card-change" style="font-size:0.75rem;color:var(--text-muted);">Forex</div>
+        </div>
+    </div>
+
+    <!-- Quick Analysis Form -->
+    <div class="grid-2" style="gap:2rem;">
+        <div>
+            <h2 style="font-size:1.1rem;color:var(--text-secondary);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Analisis Cepat</h2>
+            <div class="card">
+                <form id="analysis-form" action="/analyze" method="POST">
+                    <div class="form-group">
+                        <label class="form-label" for="ticker">Simbol Ticker</label>
+                        <input class="form-input" type="text" id="ticker" name="ticker"
+                               placeholder="Contoh: BBCA.JK, ASII.JK, BTC-USD, GC=F"
+                               value="BBCA.JK" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="date">Tanggal Analisis</label>
+                            <input class="form-input" type="date" id="date" name="date"
+                                   value="{{ today if today is defined else '' }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="asset_type">Tipe Aset</label>
+                            <select class="form-select" id="asset_type" name="asset_type">
+                                <option value="stock">Saham</option>
+                                <option value="crypto">Kripto</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display:flex;align-items:flex-end;">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                Jalankan Analisis
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div style="margin-top:1rem;">
+                <p style="color:var(--text-muted);font-size:0.85rem;">
+                    <strong>Format ticker:</strong>
+                    Saham IDX: BBCA.JK, ASII.JK, TLKM.JK |
+                    Kripto: BTC-USD, ETH-USD |
+                    Komoditas: GC=F (emas), CL=F (minyak) |
+                    Forex: USDIDR=X
+                </p>
+            </div>
+        </div>
+
+        <!-- Analysis Info -->
+        <div>
+            <h2 style="font-size:1.1rem;color:var(--text-secondary);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Cara Kerja</h2>
+            <div class="card" style="margin-bottom:1rem;">
+                <h3 style="color:var(--green);font-size:0.95rem;margin-bottom:0.5rem;">Alur Analisis Multi-Agen</h3>
+                <ol style="padding-left:1.2rem;color:var(--text-secondary);font-size:0.9rem;line-height:1.8;">
+                    <li><strong>Tim Analis</strong> &mdash; Analis Pasar, Sentimen, Berita, dan Fundamental menganalisis ticker</li>
+                    <li><strong>Tim Riset</strong> &mdash; Peneliti Bullish &amp; Bearish berdebat, Manajer Riset memutuskan</li>
+                    <li><strong>Trader</strong> &mdash; Menerjemahkan rencana menjadi proposal transaksi</li>
+                    <li><strong>Manajemen Risiko</strong> &mdash; Analis Agresif, Netral, dan Konservatif mengevaluasi risiko</li>
+                    <li><strong>Manajer Portofolio</strong> &mdash; Keputusan final: Beli / Overweight / Tahan / Underweight / Jual</li>
+                </ol>
+            </div>
+            <div class="card">
+                <h3 style="color:var(--green);font-size:0.95rem;margin-bottom:0.5rem;">Peringkat Keputusan</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                    <span class="rating-badge buy">Beli</span>
+                    <span class="rating-badge overweight">Overweight</span>
+                    <span class="rating-badge hold">Tahan</span>
+                    <span class="rating-badge underweight">Underweight</span>
+                    <span class="rating-badge sell">Jual</span>
+                </div>
+                <p style="color:var(--text-muted);font-size:0.8rem;margin-top:0.75rem;">
+                    Didukung oleh banyak penyedia LLM: OpenAI, Google Gemini, Anthropic Claude, DeepSeek, xAI, Qwen, dan lainnya.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+(function() {
+    var dateInput = document.getElementById('date');
+    if (dateInput && !dateInput.value) {
+        var today = new Date();
+        dateInput.value = today.toISOString().split('T')[0];
+    }
+})();
+</script>
+{% endblock %}
