@@ -1,4 +1,4 @@
-from tradeyuk.graph.trading_graph import tradeyukGraph
+from tradeyuk.graph.trading_graph import TradeyukGraph
 from tradeyuk.default_config import DEFAULT_CONFIG
 
 # DEFAULT_CONFIG already applies TRADEYUK_* env-var overrides

@@ -23,7 +23,14 @@ def create_market_analyst(llm):
         ]
 
         system_message = (
-            """You are a trading assistant tasked with analyzing financial markets. Your role is to select the **most relevant indicators** for a given market condition or trading strategy from the following list. The goal is to choose up to **8 indicators** that provide complementary insights without redundancy. Categories and each category's indicators are:
+            """Anda adalah asisten trading yang bertugas menganalisis pasar keuangan, termasuk Bursa Efek Indonesia (IDX) dan pasar negara berkembang. "
+            "Untuk saham Indonesia (.JK), perhatikan karakteristik unik pasar Indonesia: sesi perdagangan 09:00-16:00 WIB (dua sesi), "
+            "batas Auto-Rejection (ARA/ARB), volatilitas yang dipengaruhi arus modal asing, harga komoditas global, "
+            "dan kebijakan Bank Indonesia. Pasar Indonesia cenderung berkorelasi dengan harga komoditas (kelapa sawit, batu bara, nikel) "
+            "dan sentimen risiko global terhadap negara berkembang.\n\n"
+            "Peran Anda adalah memilih **indikator paling relevan** untuk kondisi pasar atau strategi trading dari daftar berikut. "
+            "Tujuannya adalah memilih hingga **8 indikator** yang memberikan wawasan saling melengkapi tanpa redundansi. "
+            "Kategori dan indikator masing-masing kategori adalah:"
 
 Moving Averages:
 - close_50_sma: 50 SMA: A medium-term trend indicator. Usage: Identify trend direction and serve as dynamic support/resistance. Tips: It lags price; combine with faster indicators for timely signals.

@@ -12,7 +12,7 @@ from tradeyuk.llm_clients.model_catalog import get_model_options
 
 console = Console()
 
-TICKER_INPUT_EXAMPLES = "Contoh: SPY, CNC.TO, 7203.T, 0700.HK"
+TICKER_INPUT_EXAMPLES = "Contoh: BBCA.JK, ASII.JK, TLKM.JK, BTC-USD, GC=F, XAUUSD=X, USDIDR=X, CL=F"
 
 ANALYST_ORDER = [
     ("Analis Pasar", AnalystType.MARKET),
@@ -108,7 +108,7 @@ def select_analysts(asset_type: AssetType = AssetType.STOCK) -> List[AnalystType
         asset_type,
     )
     choices = questionary.checkbox(
-        "Pilih [Tim Analis] Anda:",
+        "Pilih [Tim Analis] Anda (untuk analisis pasar Indonesia & global):",
         choices=[
             questionary.Choice(display, value=value)
             for display, value in ANALYST_ORDER
@@ -449,7 +449,7 @@ def confirm_ollama_endpoint(url: str) -> None:
 
     Surfaces three things the user benefits from seeing before model
     selection: which URL we'll actually hit, where it came from
-    (\`OLLAMA_BASE_URL\` vs default), and a soft warning if the URL is
+    (`OLLAMA_BASE_URL` vs default), and a soft warning if the URL is
     missing the scheme/port that ollama-serve expects. The warning is
     advisory only — we don't reject malformed input, since the user may
     be doing something deliberately unusual (e.g. a reverse-proxy path).

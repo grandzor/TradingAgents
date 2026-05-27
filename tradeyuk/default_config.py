@@ -84,6 +84,11 @@ DEFAULT_CONFIG = _apply_env_overrides({
     # Search queries used by get_global_news for macro headlines. Extend or
     # replace to broaden geographic / sector coverage.
     "global_news_queries": [
+        "Bank Indonesia interest rates inflation",
+        "Indonesia GDP economic growth",
+        "IDX Jakarta Composite Index market",
+        "Indonesian rupiah exchange rate forex",
+        "Indonesia commodity export palm oil coal nickel",
         "Federal Reserve interest rates inflation",
         "S&P 500 earnings GDP economic outlook",
         "geopolitical risk trade war sanctions",
@@ -117,6 +122,7 @@ DEFAULT_CONFIG = _apply_env_overrides({
         ".L":   "^FTSE",    # London (FTSE 100)
         ".TO":  "^GSPTSE",  # Toronto (TSX Composite)
         ".AX":  "^AXJO",    # Australia (ASX 200)
+        ".JK":  "^JKSE",    # Indonesia (IDX Composite / IHSG)
         "":     "SPY",      # default for US-listed tickers (no suffix)
     },
 })

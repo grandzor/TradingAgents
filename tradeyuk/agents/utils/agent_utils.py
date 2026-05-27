@@ -44,10 +44,37 @@ def build_instrument_context(ticker: str, asset_type: str = "stock") -> str:
         if asset_type == "crypto"
         else ""
     )
+
+    ticker_upper = ticker.strip().upper()
+
+    # Indonesia-specific context
+    indo_hint = ""
+    if ticker_upper.endswith(".JK"):
+        indo_hint = (
+            " Perhatikan bahwa ini adalah saham yang terdaftar di Bursa Efek Indonesia (IDX). "
+            "Sektor utama IDX meliputi perbankan, konsumen, pertambangan, komoditas (kelapa sawit, batu bara, nikel), "
+            "telekomunikasi, dan infrastruktur. Fundamental perusahaan dilaporkan dalam Rupiah Indonesia (IDR). "
+            "Pertimbangkan kondisi makroekonomi Indonesia termasuk suku bunga Bank Indonesia, nilai tukar IDR, "
+            "harga komoditas global, dan regulasi domestik."
+        )
+    elif "IDR" in ticker_upper or ticker_upper.endswith("=X") and "IDR" in ticker_upper:
+        indo_hint = (
+            " Ini adalah pasangan mata uang yang melibatkan Rupiah Indonesia (IDR). "
+            "Pertimbangkan kebijakan moneter Bank Indonesia, data ekspor-impor Indonesia, "
+            "harga komoditas, dan sentimen pasar negara berkembang."
+        )
+    elif ticker_upper in ("^JKSE", "EIDO"):
+        indo_hint = (
+            " Ini adalah indeks/produk pasar Indonesia secara keseluruhan. "
+            "Analisis harus mencakup kondisi makroekonomi Indonesia, arus modal asing, "
+            "harga komoditas, dan sentimen pasar negara berkembang."
+        )
+
     return (
         f"Instrumen {instrument_label} yang akan dianalisis adalah `{ticker}`. "
         "Gunakan ticker persis ini dalam setiap panggilan alat, laporan, dan rekomendasi, "
-        "dengan mempertahankan sufiks bursa apa pun (mis. `.TO`, `.L`, `.HK`, `.T`, `-USD`)."
+        "dengan mempertahankan sufiks bursa apa pun (mis. `.TO`, `.L`, `.HK`, `.T`, `.JK`, `-USD`, `=X`)."
+        + indo_hint
         + extra_hint
     )
 

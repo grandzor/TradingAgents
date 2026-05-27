@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from tradeyuk.agents.utils.memory import TradingMemoryLog
 from tradeyuk.agents.schemas import PortfolioDecision, PortfolioRating
 from tradeyuk.graph.reflection import Reflector
-from tradeyuk.graph.trading_graph import tradeyukGraph
+from tradeyuk.graph.trading_graph import TradeyukGraph
 from tradeyuk.graph.propagation import Propagator
 from tradeyuk.agents.managers.portfolio_manager import create_portfolio_manager
 

@@ -20,7 +20,7 @@ from rich import box
 from rich.align import Align
 from rich.rule import Rule
 
-from tradeyuk.graph.trading_graph import tradeyukGraph
+from tradeyuk.graph.trading_graph import TradeyukGraph
 from tradeyuk.graph.analyst_execution import (
     AnalystWallTimeTracker,
     build_analyst_execution_plan,
@@ -266,7 +266,6 @@ def update_display(layout, spinner_text=None, stats_handler=None, start_time=Non
             padding=(1, 2),
             expand=True,
         )
-    )
     )
 
     # Progress panel showing agent status
@@ -534,8 +533,8 @@ def get_user_selections():
     console.print(
         create_question_box(
             "Langkah 1: Simbol Ticker",
-            "Masukkan simbol ticker yang tepat untuk dianalisis, termasuk akhiran bursa jika diperlukan (contoh: SPY, CNC.TO, 7203.T, 0700.HK)",
-            "SPY",
+            "Masukkan simbol ticker yang tepat untuk dianalisis — pasar Indonesia (contoh: BBCA.JK, ASII.JK, TLKM.JK), kripto (BTC-USD), komoditas (GC=F, CL=F), atau forex (USDIDR=X)",
+            "BBCA.JK",
         )
     )
     selected_ticker = get_ticker()
@@ -681,14 +680,14 @@ def get_ticker():
                 and len(value.strip()) <= 32
             )
         )
-        or "Harap masukkan simbol ticker yang valid, mis: AAPL, 000404.SZ, 0700.HK.",
+        or "Harap masukkan simbol ticker yang valid. Pasar Indonesia: BBCA.JK, ASII.JK, TLKM.JK. Kripto: BTC-USD. Komoditas: GC=F, CL=F. Forex: USDIDR=X.",
     ).ask()
 
     if ticker is None:
         console.print("\n[red]Tidak ada simbol ticker yang diberikan. Keluar...[/red]")
         raise typer.Exit(1)
 
-    return (ticker.strip() or "SPY").upper()
+    return (ticker.strip() or "BBCA.JK").upper()
 
 
 def get_analysis_date():

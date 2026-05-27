@@ -1,6 +1,6 @@
 # tradeyuk/graph/__init__.py
 
-from .trading_graph import tradeyukGraph
+from .trading_graph import TradeyukGraph
 from .conditional_logic import ConditionalLogic
 from .setup import GraphSetup
 from .propagation import Propagator
