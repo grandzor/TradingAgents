@@ -118,16 +118,29 @@ class StockstatsUtils:
             str, "curr date for retrieving stock price data, YYYY-mm-dd"
         ],
     ):
-        data = load_ohlcv(symbol, curr_date)
-        df = wrap(data)
-        df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
-        curr_date_str = pd.to_datetime(curr_date).strftime("%Y-%m-%d")
+        import logging
+        _log = logging.getLogger(__name__)
+        try:
+            data = load_ohlcv(symbol, curr_date)
+            df = wrap(data)
+            try:
+                df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
+            except Exception:
+                pass
+            curr_date_str = pd.to_datetime(curr_date).strftime("%Y-%m-%d")
 
-        df[indicator]  # trigger stockstats to calculate the indicator
-        matching_rows = df[df["Date"].str.startswith(curr_date_str)]
+            try:
+                df[indicator]  # trigger stockstats to calculate the indicator
+                matching_rows = df[df["Date"].str.startswith(curr_date_str)]
 
-        if not matching_rows.empty:
-            indicator_value = matching_rows[indicator].values[0]
-            return indicator_value
-        else:
-            return "N/A: Not a trading day (weekend or holiday)"
+                if not matching_rows.empty:
+                    indicator_value = matching_rows[indicator].values[0]
+                    return indicator_value
+                else:
+                    return "N/A: Bukan hari trading (akhir pekan atau libur)"
+            except Exception as e:
+                _log.debug(f"stockstats indicator '{indicator}' pada {curr_date}: {e}")
+                return f"N/A: Indikator tidak tersedia"
+        except Exception as e:
+            _log.debug(f"stockstats error for {symbol}/{indicator}: {e}")
+            return f"N/A: Data tidak tersedia"
