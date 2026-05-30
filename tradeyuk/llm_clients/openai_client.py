@@ -139,7 +139,7 @@ class MinimaxChatOpenAI(NormalizedChatOpenAI):
 # Kwargs forwarded from user config to ChatOpenAI
 _PASSTHROUGH_KWARGS = (
     "timeout", "max_retries", "reasoning_effort",
-    "api_key", "callbacks", "http_client", "http_async_client",
+    "openai_api_key", "callbacks", "http_client", "http_async_client",
 )
 
 # Provider base URLs. API-key env vars live in api_key_env.PROVIDER_API_KEY_ENV
@@ -210,7 +210,7 @@ class OpenAIClient(BaseLLMClient):
             if api_key_env:
                 api_key = os.environ.get(api_key_env)
                 if api_key:
-                    llm_kwargs["api_key"] = api_key
+                    llm_kwargs["openai_api_key"] = api_key
                 else:
                     raise ValueError(
                         f"API key for provider '{self.provider}' is not set. "
@@ -218,7 +218,7 @@ class OpenAIClient(BaseLLMClient):
                         f"(e.g. add {api_key_env}=your_key to your .env file)."
                     )
             else:
-                llm_kwargs["api_key"] = "ollama"
+                llm_kwargs["openai_api_key"] = "ollama"
         elif self.base_url:
             llm_kwargs["base_url"] = self.base_url
 
