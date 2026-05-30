@@ -77,6 +77,26 @@ async def dashboard(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
+@router.get("/health")
+async def health_check():
+    try:
+        from tradeyuk.llm_clients.factory import create_llm_client
+        from tradeyuk.default_config import DEFAULT_CONFIG
+        provider = DEFAULT_CONFIG.get("llm_provider", "?")
+        c = create_llm_client(provider, DEFAULT_CONFIG["quick_think_llm"])
+        llm = c.get_llm()
+        key_set = llm.openai_api_key is not None
+        return JSONResponse({
+            "status": "ok",
+            "provider": provider,
+            "model": DEFAULT_CONFIG["quick_think_llm"],
+            "base_url": llm.openai_api_base,
+            "key_configured": key_set
+        })
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
+
 @router.post("/analyze", response_class=HTMLResponse)
 async def analyze_start(
     request: Request,
@@ -231,8 +251,16 @@ async def stream_analysis(
                     q.put({"type": "done", "result": result}), loop
                 )
             except Exception as e:
+                err_msg = str(e)
+                if "OPENAI_API_KEY" in err_msg or "Missing credentials" in err_msg:
+                    err_msg = (
+                        f"Error kredensial LLM: {err_msg}\n\n"
+                        "Pastikan Anda telah mengatur API key di file .env:\n"
+                        "  DEEPSEEK_API_KEY=sk-...\n\n"
+                        f"Provider saat ini: {DEFAULT_CONFIG.get('llm_provider', '?')}"
+                    )
                 asyncio.run_coroutine_threadsafe(
-                    q.put({"type": "error", "message": str(e)}), loop
+                    q.put({"type": "error", "message": err_msg}), loop
                 )
 
         with ThreadPoolExecutor(max_workers=1) as executor:
