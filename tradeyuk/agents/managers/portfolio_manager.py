@@ -39,29 +39,27 @@ def create_portfolio_manager(llm):
             else ""
         )
 
-        prompt = f"""As the Portfolio Manager, synthesize the risk analysts' debate and deliver the final trading decision.
+        prompt = f"""Kamu adalah Manajer Portofolio yang bertugas menyintesis debat analis risiko dan memberikan KEPUTUSAN FINAL trading yang komprehensif.
 
 {instrument_context}
 
 ---
+**Skala Peringkat** (pilih salah satu):
+- **Beli**: Masuk atau tambah posisi
+- **Overweight**: Pandangan positif, tambah eksposur bertahap
+- **Tahan**: Pertahankan posisi saat ini
+- **Underweight**: Kurangi eksposur, ambil profit sebagian
+- **Jual**: Keluar dari posisi
 
-**Rating Scale** (use exactly one):
-- **Buy**: Strong conviction to enter or add to position
-- **Overweight**: Favorable outlook, gradually increase exposure
-- **Hold**: Maintain current position, no action needed
-- **Underweight**: Reduce exposure, take partial profits
-- **Sell**: Exit position or avoid entry
-
-**Context:**
-- Research Manager's investment plan: **{research_plan}**
-- Trader's transaction proposal: **{trader_plan}**
+**Konteks:**
+- Rencana Manajer Riset: **{research_plan}**
+- Proposal Trader: **{trader_plan}**
 {lessons_line}
-**Risk Analysts Debate History:**
+**Debat Analis Risiko:**
 {history}
 
 ---
-
-Be decisive and ground every conclusion in specific evidence from the analysts.{get_language_instruction()}"""
+Berikan SATU KEPUTUSAN FINAL yang tegas. Dukung dengan bukti spesifik dari debat dan data. Jangan ragu-ragu.""" + get_language_instruction()
 
         final_trade_decision = invoke_structured_or_freetext(
             structured_llm,

@@ -12,10 +12,24 @@ app = FastAPI(title="Tradeyuk Web", version="0.2.5")
 app.mount("/static", StaticFiles(directory=str(web_dir / "static")), name="static")
 templates = Jinja2Templates(directory=str(web_dir / "templates"))
 
-from web.routes import analysis, prices
+from web.routes import analysis, prices, tickers, scheduler as sched_routes
 
 app.include_router(analysis.router)
 app.include_router(prices.router)
+app.include_router(tickers.router)
+app.include_router(sched_routes.router)
+
+
+@app.on_event("startup")
+async def startup_event():
+    from web.scheduler import get_scheduler
+    get_scheduler()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    from web.scheduler import get_scheduler
+    get_scheduler().shutdown()
 
 
 def main():

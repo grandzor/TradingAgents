@@ -15,28 +15,28 @@
             <div class="card-header">
                 <span class="card-title">Indeks IHSG</span>
             </div>
-            <div class="card-value">—</div>
+            <div class="card-value">&mdash;</div>
             <div class="card-change" style="font-size:0.75rem;color:var(--text-muted);">IDX Composite</div>
         </div>
         <div class="card ticker-card" data-ticker="GOLD">
             <div class="card-header">
                 <span class="card-title">Emas (Proksi GC=F)</span>
             </div>
-            <div class="card-value">—</div>
+            <div class="card-value">&mdash;</div>
             <div class="card-change" style="font-size:0.75rem;color:var(--text-muted);">per troy ounce &times; Rp16.500</div>
         </div>
         <div class="card ticker-card" data-ticker="BTC_IDR">
             <div class="card-header">
                 <span class="card-title">Bitcoin (IDR)</span>
             </div>
-            <div class="card-value">—</div>
+            <div class="card-value">&mdash;</div>
             <div class="card-change" style="font-size:0.75rem;color:var(--text-muted);">Indodax</div>
         </div>
         <div class="card ticker-card" data-ticker="USDIDR=X">
             <div class="card-header">
                 <span class="card-title">USD / IDR</span>
             </div>
-            <div class="card-value">—</div>
+            <div class="card-value">&mdash;</div>
             <div class="card-change" style="font-size:0.75rem;color:var(--text-muted);">Forex</div>
         </div>
     </div>
@@ -48,10 +48,16 @@
             <div class="card">
                 <form id="analysis-form" action="/analyze" method="POST">
                     <div class="form-group">
-                        <label class="form-label" for="ticker">Simbol Ticker</label>
-                        <input class="form-input" type="text" id="ticker" name="ticker"
-                               placeholder="Contoh: BBCA.JK, ASII.JK, BTC-USD, GC=F"
-                               value="BBCA.JK" required>
+                        <label class="form-label" for="ticker-input">Simbol Ticker</label>
+                        <div class="ticker-search-wrapper">
+                            <div class="ticker-search-field">
+                                <input class="form-input" type="text" id="ticker-input"
+                                       placeholder="Cari ticker..." autocomplete="off">
+                                <input type="hidden" id="ticker" name="ticker" value="" required>
+                                <span class="ticker-search-caret">&#9660;</span>
+                            </div>
+                            <div class="ticker-dropdown" id="ticker-dropdown"></div>
+                        </div>
                     </div>
 
                     <div class="form-row">
@@ -78,12 +84,19 @@
 
             <div style="margin-top:1rem;">
                 <p style="color:var(--text-muted);font-size:0.85rem;">
-                    <strong>Format ticker:</strong>
-                    Saham IDX: BBCA.JK, ASII.JK, TLKM.JK |
-                    Kripto: BTC-USD, ETH-USD |
-                    Komoditas: GC=F (emas), CL=F (minyak) |
-                    Forex: USDIDR=X
+                    <strong>Ketik nama perusahaan atau simbol</strong> untuk mencari ticker.
+                    Data pasar diambil dari Yahoo Finance &amp; Indodax.
                 </p>
+            </div>
+
+            <div style="margin-top:1.5rem;">
+                <div class="card" style="display:flex;align-items:center;justify-content:space-between;">
+                    <div>
+                        <h3 style="font-size:0.95rem;font-weight:600;">Jadwal Analisis</h3>
+                        <p style="color:var(--text-muted);font-size:0.8rem;margin-top:0.15rem;">Otomatiskan analisis berulang</p>
+                    </div>
+                    <a href="/schedules" class="btn btn-primary btn-sm">Kelola Jadwal</a>
+                </div>
             </div>
         </div>
 

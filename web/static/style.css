@@ -316,6 +316,19 @@ a:hover {
     border: 1px solid var(--sell-border);
 }
 
+.type-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
 /* ── Section / Collapsible ── */
 .section {
     margin-bottom: 0.75rem;
@@ -534,6 +547,106 @@ tbody tr:hover {
 .auto-refresh-bar .countdown {
     color: var(--green);
     font-weight: 600;
+}
+
+/* ── Ticker Search Dropdown ── */
+.ticker-search-wrapper {
+    position: relative;
+}
+.ticker-search-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.ticker-search-field .form-input {
+    padding-right: 2.2rem;
+}
+.ticker-search-caret {
+    position: absolute;
+    right: 0.85rem;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    pointer-events: none;
+    transition: transform var(--transition);
+}
+.ticker-search-wrapper:focus-within .ticker-search-caret {
+    transform: rotate(180deg);
+    color: var(--green);
+}
+.ticker-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.ticker-dropdown.show {
+    display: block;
+}
+.ticker-dropdown-group-header {
+    padding: 0.45rem 0.85rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--green);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+.ticker-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.85rem;
+    cursor: pointer;
+    transition: background var(--transition);
+    border-bottom: 1px solid rgba(43, 47, 54, 0.4);
+}
+.ticker-dropdown-item:last-child {
+    border-bottom: none;
+}
+.ticker-dropdown-item:hover,
+.ticker-dropdown-item:focus {
+    background: var(--bg-card-hover);
+}
+.ticker-dropdown-symbol {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 80px;
+    white-space: nowrap;
+}
+.ticker-dropdown-name {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ticker-dropdown-name small {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    display: block;
+    line-height: 1.2;
+}
+.ticker-dropdown-empty {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
 }
 
 /* ── Responsive ── */

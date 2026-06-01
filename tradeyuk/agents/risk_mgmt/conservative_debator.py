@@ -6,51 +6,53 @@ def create_conservative_debator(llm):
         risk_debate_state = state["risk_debate_state"]
         history = risk_debate_state.get("history", "")
         conservative_history = risk_debate_state.get("conservative_history", "")
-
         current_aggressive_response = risk_debate_state.get("current_aggressive_response", "")
         current_neutral_response = risk_debate_state.get("current_neutral_response", "")
-
-        market_research_report = state["market_report"]
-        sentiment_report = state["sentiment_report"]
-        news_report = state["news_report"]
-        fundamentals_report = state["fundamentals_report"]
-
         trader_decision = state["trader_investment_plan"]
+        lang = get_language_instruction()
 
-        prompt = f"""As the Conservative Risk Analyst, your primary objective is to protect assets, minimize volatility, and ensure steady, reliable growth. You prioritize stability, security, and risk mitigation, carefully assessing potential losses, economic downturns, and market volatility. When evaluating the trader's decision or plan, critically examine high-risk elements, pointing out where the decision may expose the firm to undue risk and where more cautious alternatives could secure long-term gains. Here is the trader's decision:
+        others = ""
+        if current_aggressive_response:
+            others += f"Argumen Agresif: {current_aggressive_response[:800]}\n"
+        if current_neutral_response:
+            others += f"Argumen Netral: {current_neutral_response[:800]}\n"
+        if not others:
+            others = "Belum ada argumen dari analis lain. Buat argumen konservatif pertamamu."
 
+        prompt = f"""Kamu adalah Analis Risiko Konservatif dalam debat langsung dengan Analis Agresif dan Netral tentang keputusan trading ini.
+
+KEPUTUSAN TRADER:
 {trader_decision}
 
-Your task is to actively counter the arguments of the Aggressive and Neutral Analysts, highlighting where their views may overlook potential threats or fail to prioritize sustainability. Respond directly to their points, drawing from the following data sources to build a convincing case for a low-risk approach adjustment to the trader's decision:
+{others}
 
-Market Research Report: {market_research_report}
-Social Media Sentiment Report: {sentiment_report}
-Latest World Affairs Report: {news_report}
-Company Fundamentals Report: {fundamentals_report}
-Here is the current conversation history: {history} Here is the last response from the aggressive analyst: {current_aggressive_response} Here is the last response from the neutral analyst: {current_neutral_response}. If there are no responses from the other viewpoints yet, present your own argument based on the available data.
+RIWAYAT DEBAT:
+{history}
 
-Engage by questioning their optimism and emphasizing the potential downsides they may have overlooked. Address each of their counterpoints to showcase why a conservative stance is ultimately the safest path for the firm's assets. Focus on debating and critiquing their arguments to demonstrate the strength of a low-risk strategy over their approaches. Output conversationally as if you are speaking without any special formatting.""" + get_language_instruction()
+TUGASMU:
+1. TANGGAPI LANGSUNG argumen agresif dan netral di atas
+2. Prioritaskan keamanan modal - tunjukkan risiko yang terlewatkan
+3. Advokasi strategi yang lebih hati-hati dengan data spesifik
+4. Jika kamu SETUJU dengan poin lawan, akui dan gunakan "CONSENSUS_REACHED"
+5. BERDEBATLAH secara percakapan, bukan sekadar presentasi
+
+FOKUS PASAR INDONESIA: Jika menyangkut saham IDX atau aset Indonesia, pertimbangkan volatilitas IDR, batas ARA/ARB, dan risiko regulasi domestik.
+""" + lang
 
         response = llm.invoke(prompt)
-
         argument = f"Conservative Analyst: {response.content}"
 
-        new_risk_debate_state = {
+        new_state = {
             "history": history + "\n" + argument,
             "aggressive_history": risk_debate_state.get("aggressive_history", ""),
             "conservative_history": conservative_history + "\n" + argument,
             "neutral_history": risk_debate_state.get("neutral_history", ""),
             "latest_speaker": "Conservative",
-            "current_aggressive_response": risk_debate_state.get(
-                "current_aggressive_response", ""
-            ),
+            "current_aggressive_response": risk_debate_state.get("current_aggressive_response", ""),
             "current_conservative_response": argument,
-            "current_neutral_response": risk_debate_state.get(
-                "current_neutral_response", ""
-            ),
+            "current_neutral_response": risk_debate_state.get("current_neutral_response", ""),
             "count": risk_debate_state["count"] + 1,
         }
-
-        return {"risk_debate_state": new_risk_debate_state}
+        return {"risk_debate_state": new_state}
 
     return conservative_node

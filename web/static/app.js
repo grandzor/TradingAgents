@@ -81,6 +81,124 @@
         });
     }
 
+    /* ── Ticker Search Dropdown ── */
+    var tickerData = null;
+
+    function fetchTickers() {
+        var searchInput = document.getElementById('ticker-input');
+        if (!searchInput) return;
+
+        fetch('/api/tickers')
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                tickerData = data;
+                buildDropdown('');
+            })
+            .catch(function () {});
+    }
+
+    function buildDropdown(filter) {
+        var dropdown = document.getElementById('ticker-dropdown');
+        if (!dropdown || !tickerData) return;
+
+        filter = (filter || '').toLowerCase();
+        var html = '';
+        var hasResults = false;
+
+        tickerData.categories.forEach(function (cat) {
+            var filteredTickers = cat.tickers.filter(function (t) {
+                return t.symbol.toLowerCase().indexOf(filter) !== -1 ||
+                    t.name.toLowerCase().indexOf(filter) !== -1 ||
+                    (t.sector && t.sector.toLowerCase().indexOf(filter) !== -1);
+            });
+
+            if (filteredTickers.length > 0) {
+                hasResults = true;
+                html += '<div class="ticker-dropdown-group">';
+                html += '<div class="ticker-dropdown-group-header">' + cat.name + '</div>';
+                filteredTickers.forEach(function (t) {
+                    html += '<div class="ticker-dropdown-item" data-symbol="' + t.symbol + '" data-name="' + t.name + '">';
+                    html += '<span class="ticker-dropdown-symbol">' + t.symbol + '</span>';
+                    html += '<span class="ticker-dropdown-name">' + t.name;
+                    if (t.sector) html += ' <small>' + t.sector + '</small>';
+                    html += '</span></div>';
+                });
+                html += '</div>';
+            }
+        });
+
+        if (!hasResults) {
+            html = '<div class="ticker-dropdown-empty">Tidak ada ticker yang cocok</div>';
+        }
+
+        dropdown.innerHTML = html;
+    }
+
+    function showDropdown() {
+        var dropdown = document.getElementById('ticker-dropdown');
+        if (dropdown) dropdown.classList.add('show');
+    }
+
+    function hideDropdown() {
+        var dropdown = document.getElementById('ticker-dropdown');
+        if (dropdown) dropdown.classList.remove('show');
+    }
+
+    function selectTicker(symbol, name) {
+        var searchInput = document.getElementById('ticker-input');
+        var hiddenInput = document.getElementById('ticker');
+        if (searchInput) searchInput.value = symbol + ' \u2014 ' + name;
+        if (hiddenInput) hiddenInput.value = symbol;
+        hideDropdown();
+    }
+
+    function initTickerSearch() {
+        var searchInput = document.getElementById('ticker-input');
+        var dropdown = document.getElementById('ticker-dropdown');
+        if (!searchInput || !dropdown) return;
+
+        fetchTickers();
+
+        searchInput.addEventListener('focus', function () {
+            if (!tickerData) fetchTickers();
+            buildDropdown(this.value);
+            showDropdown();
+        });
+
+        searchInput.addEventListener('input', function () {
+            buildDropdown(this.value);
+            showDropdown();
+        });
+
+        searchInput.addEventListener('blur', function () {
+            setTimeout(hideDropdown, 200);
+        });
+
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                hideDropdown();
+                this.blur();
+            }
+        });
+
+        dropdown.addEventListener('mousedown', function (e) {
+            var item = e.target.closest('.ticker-dropdown-item');
+            if (item) {
+                var symbol = item.getAttribute('data-symbol');
+                var name = item.getAttribute('data-name');
+                selectTicker(symbol, name);
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            var wrapper = document.querySelector('.ticker-search-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                hideDropdown();
+            }
+        });
+    }
+
     /* ── Analysis Form ── */
     var analysisForm = document.getElementById('analysis-form');
     if (analysisForm) {
@@ -92,7 +210,7 @@
             var assetType = formData.get('asset_type');
 
             if (!ticker || !date) {
-                toast('Harap isi ticker dan tanggal terlebih dahulu.', 'error');
+                toast('Harap pilih ticker dan tanggal terlebih dahulu.', 'error');
                 return;
             }
 
@@ -314,6 +432,7 @@
 
     /* ── Init ── */
     document.addEventListener('DOMContentLoaded', function () {
+        initTickerSearch();
         loadMarketTicker();
         initCollapsibles();
         startAnalysisStream();

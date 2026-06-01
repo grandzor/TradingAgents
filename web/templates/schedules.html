@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Tradeyuk - Jadwal Analisis{% endblock %}
+{% block content %}
+
+<div class="container">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+        <div>
+            <h1 style="font-size:1.5rem;font-weight:700;">Jadwal Analisis</h1>
+            <p style="color:var(--text-secondary);font-size:0.9rem;">Atur analisis otomatis berulang untuk ticker pilihan Anda</p>
+        </div>
+    </div>
+
+    {% if schedules %}
+    <div class="card" style="padding:0;margin-bottom:2rem;">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Frekuensi</th>
+                        <th>Tipe</th>
+                        <th>Terakhir Jalan</th>
+                        <th>Berikutnya</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in schedules %}
+                    <tr id="schedule-row-{{ s.id }}">
+                        <td><strong>{{ s.ticker }}</strong></td>
+                        <td>{{ freq_labels.get(s.frequency, s.frequency) }}</td>
+                        <td><span class="type-badge">{{ s.asset_type }}</span></td>
+                        <td style="font-family:var(--font-mono);font-size:0.8rem;">
+                            {% if s.last_run %}
+                            {{ s.last_run }}
+                            {% if s.last_result and s.last_result.status == 'error' %}
+                            <span style="color:var(--red);margin-left:0.25rem;" title="{{ s.last_result.message }}">&#9888;</span>
+                            {% endif %}
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td style="font-family:var(--font-mono);font-size:0.8rem;">{{ s.next_run or '—' }}</td>
+                        <td>
+                            <button class="btn btn-outline btn-sm btn-delete" data-id="{{ s.id }}" style="color:var(--red);border-color:var(--red-dark);">Hapus</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="text-align:center;padding:3rem 1rem;margin-bottom:2rem;">
+        <p style="color:var(--text-muted);font-size:1.1rem;">Belum ada jadwal analisis.</p>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-top:0.5rem;">Tambahkan jadwal di bawah untuk memulai analisis otomatis.</p>
+    </div>
+    {% endif %}
+
+    <!-- New Schedule Form -->
+    <h2 style="font-size:1.1rem;color:var(--text-secondary);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Tambah Jadwal Baru</h2>
+    <div class="card">
+        <form id="schedule-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="sched-ticker">Simbol Ticker</label>
+                    <input class="form-input" type="text" id="sched-ticker" name="ticker"
+                           placeholder="Contoh: BBCA.JK, BTC-USD" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="sched-frequency">Frekuensi</label>
+                    <select class="form-select" id="sched-frequency" name="frequency">
+                        {% for key, label in freq_labels.items() %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="sched-asset-type">Tipe Aset</label>
+                    <select class="form-select" id="sched-asset-type" name="asset_type">
+                        <option value="stock">Saham</option>
+                        <option value="crypto">Kripto</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Tambah Jadwal
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+(function() {
+    function toast(msg, type) {
+        type = type || 'info';
+        var el = document.createElement('div');
+        el.className = 'toast ' + type;
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(function() { el.remove(); }, 4000);
+    }
+
+    var form = document.getElementById('schedule-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(form);
+
+            fetch('/api/schedules', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(r) {
+                if (!r.ok) return r.json().then(function(d) { throw new Error(d.detail || 'Gagal'); });
+                return r.json();
+            })
+            .then(function() {
+                toast('Jadwal berhasil ditambahkan!', 'success');
+                setTimeout(function() { window.location.reload(); }, 800);
+            })
+            .catch(function(err) {
+                toast('Gagal menambah jadwal: ' + err.message, 'error');
+            });
+        });
+    }
+
+    document.querySelectorAll('.btn-delete').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = this.dataset.id;
+            if (!confirm('Hapus jadwal ini?')) return;
+
+            fetch('/api/schedules/' + id, { method: 'DELETE' })
+                .then(function(r) {
+                    if (!r.ok) return r.json().then(function(d) { throw new Error(d.detail || 'Gagal'); });
+                    return r.json();
+                })
+                .then(function() {
+                    toast('Jadwal dihapus.', 'success');
+                    var row = document.getElementById('schedule-row-' + id);
+                    if (row) row.remove();
+                    if (!document.querySelectorAll('.btn-delete').length) {
+                        setTimeout(function() { window.location.reload(); }, 500);
+                    }
+                })
+                .catch(function(err) {
+                    toast('Gagal menghapus jadwal: ' + err.message, 'error');
+                });
+        });
+    });
+})();
+</script>
+{% endblock %}

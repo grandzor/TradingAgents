@@ -6,53 +6,50 @@ def create_bear_researcher(llm):
         investment_debate_state = state["investment_debate_state"]
         history = investment_debate_state.get("history", "")
         bear_history = investment_debate_state.get("bear_history", "")
-
         current_response = investment_debate_state.get("current_response", "")
         market_research_report = state["market_report"]
         sentiment_report = state["sentiment_report"]
         news_report = state["news_report"]
         fundamentals_report = state["fundamentals_report"]
         asset_type = state.get("asset_type", "stock")
-        target_label = "stock" if asset_type == "stock" else "asset"
-        fundamentals_label = (
-            "Company fundamentals report"
-            if asset_type == "stock"
-            else "Asset fundamentals report (may be unavailable for crypto)"
-        )
+        target_label = "saham" if asset_type == "stock" else "aset"
+        lang = get_language_instruction()
 
-        prompt = f"""You are a Bear Analyst making the case against investing in the {target_label}. Your goal is to present a well-reasoned argument emphasizing risks, challenges, and negative indicators. Leverage the provided research and data to highlight potential downsides and counter bullish arguments effectively.
+        prompt = f"""Kamu adalah Analis Bearish dalam debat langsung dengan Analis Bullish tentang {target_label} ini.
 
-Key points to focus on:
+ARGUMEN BULLISH TERBARU (yang harus kamu tanggapi langsung):
+{current_response}
 
-- Risks and Challenges: Highlight factors like market saturation, financial instability, or macroeconomic threats that could hinder the stock's performance.
-- Competitive Weaknesses: Emphasize vulnerabilities such as weaker market positioning, declining innovation, or threats from competitors.
-- Negative Indicators: Use evidence from financial data, market trends, or recent adverse news to support your position.
-- Bull Counterpoints: Critically analyze the bull argument with specific data and sound reasoning, exposing weaknesses or over-optimistic assumptions.
-- Engagement: Present your argument in a conversational style, directly engaging with the bull analyst's points and debating effectively rather than simply listing facts.
+RIWAYAT DEBAT:
+{history}
 
-Resources available:
+Tugasmu:
+1. TANGGAPI langsung argumen bullish di atas - tunjukkan risiko dan kelemahannya
+2. Bangun kasus bearish dengan data spesifik tentang risiko, valuasi, dan tantangan
+3. Jika kamu SETUJU dengan poin bullish, AKUI dan gunakan "CONSENSUS_REACHED" untuk mengakhiri
+4. Angkat risiko yang belum dibahas: makroekonomi, industri, regulasi
 
-Market research report: {market_research_report}
-Social media sentiment report: {sentiment_report}
-Latest world affairs news: {news_report}
-{fundamentals_label}: {fundamentals_report}
-Conversation history of the debate: {history}
-Last bull argument: {current_response}
-Use this information to deliver a compelling bear argument, refute the bull's claims, and engage in a dynamic debate that demonstrates the risks and weaknesses of investing in the {target_label}.
-""" + get_language_instruction()
+FOKUS PASAR INDONESIA: Jika saham IDX (.JK), pertimbangkan risiko nilai tukar IDR, kebijakan BI, volatilitas IHSG, dan ketergantungan komoditas.
+
+Laporan tersedia:
+- Pasar: {market_research_report[:500]}...
+- Fundamental: {fundamentals_report[:500]}...
+- Sentimen: {sentiment_report[:300]}...
+- Berita: {news_report[:300]}...
+
+BERDEBATLAH seperti percakapan nyata - sapa Analis Bullish, tanggapi spesifik argumennya, dan bangun menuju kesimpulan bersama. Jika kamu setuju dengan mayoritas poin bullish, nyatakan CONSENSUS_REACHED.
+""" + lang
 
         response = llm.invoke(prompt)
-
         argument = f"Bear Analyst: {response.content}"
 
-        new_investment_debate_state = {
+        new_state = {
             "history": history + "\n" + argument,
             "bear_history": bear_history + "\n" + argument,
             "bull_history": investment_debate_state.get("bull_history", ""),
             "current_response": argument,
             "count": investment_debate_state["count"] + 1,
         }
-
-        return {"investment_debate_state": new_investment_debate_state}
+        return {"investment_debate_state": new_state}
 
     return bear_node

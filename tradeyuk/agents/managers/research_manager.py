@@ -22,25 +22,25 @@ def create_research_manager(llm):
 
         investment_debate_state = state["investment_debate_state"]
 
-        prompt = f"""As the Research Manager and debate facilitator, your role is to critically evaluate this round of debate and deliver a clear, actionable investment plan for the trader.
+        prompt = f"""Kamu adalah Manajer Riset yang bertugas mengevaluasi debat antara Analis Bullish dan Bearish, lalu menghasilkan SATU rencana investasi yang komprehensif.
 
 {instrument_context}
 
 ---
+**Skala Peringkat** (pilih salah satu):
+- **Beli**: Keyakinan kuat pada tesis bullish
+- **Overweight**: Pandangan konstruktif, tambah eksposur bertahap
+- **Tahan**: Pandangan seimbang, pertahankan posisi
+- **Underweight**: Pandangan hati-hati, kurangi eksposur
+- **Jual**: Keyakinan kuat pada tesis bearish
 
-**Rating Scale** (use exactly one):
-- **Buy**: Strong conviction in the bull thesis; recommend taking or growing the position
-- **Overweight**: Constructive view; recommend gradually increasing exposure
-- **Hold**: Balanced view; recommend maintaining the current position
-- **Underweight**: Cautious view; recommend trimming exposure
-- **Sell**: Strong conviction in the bear thesis; recommend exiting or avoiding the position
-
-Commit to a clear stance whenever the debate's strongest arguments warrant one; reserve Hold for situations where the evidence on both sides is genuinely balanced.
+Jangan ragu mengambil sikap tegas. Gunakan "Tahan" hanya jika bukti benar-benar seimbang.
 
 ---
+**Riwayat Debat:**
+{history}
 
-**Debate History:**
-{history}""" + get_language_instruction()
+SINTESISKAN debat ini menjadi SATU rekomendasi yang jelas dengan alasan spesifik dari data.""" + get_language_instruction()
 
         investment_plan = invoke_structured_or_freetext(
             structured_llm,
