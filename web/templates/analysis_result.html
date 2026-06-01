@@ -3,62 +3,99 @@
 {% block content %}
 
 <div class="container">
-    <div style="margin-bottom:1.5rem;">
-        <a href="/" style="color:var(--text-muted);font-size:0.85rem;">&larr; Kembali ke Beranda</a>
-        <span style="color:var(--text-muted);font-size:0.85rem;margin:0 0.5rem;">|</span>
-        <a href="/history" style="color:var(--text-muted);font-size:0.85rem;">Riwayat</a>
-    </div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+    <div style="margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
         <div>
-            <h1 style="font-size:1.5rem;font-weight:700;">Hasil Analisis {{ ticker }}</h1>
-            <p style="color:var(--text-secondary);font-size:0.9rem;">Tanggal: {{ date }}</p>
+            <a href="/" style="color:var(--text-muted);font-size:0.85rem;">&larr; Beranda</a>
+            <span style="color:var(--text-muted);font-size:0.85rem;margin:0 0.5rem;">|</span>
+            <a href="/history" style="color:var(--text-muted);font-size:0.85rem;">Riwayat</a>
         </div>
         <div>
-            <span class="rating-badge {{ rating.class }}">{{ rating.label }}</span>
+            <a href="/api/report/download?ticker={{ ticker }}&date={{ date }}" class="btn btn-sm" style="background:var(--accent);color:#000;border:none;padding:0.4rem 0.9rem;border-radius:6px;text-decoration:none;font-size:0.85rem;font-weight:600;">
+                &#128229; Unduh Laporan
+            </a>
         </div>
     </div>
 
-    {% if entry_price or stop_loss or price_target %}
-    <div class="grid-3" style="margin-bottom:1.5rem;">
-        {% if entry_price %}
-        <div class="card" style="text-align:center;">
-            <div class="card-title">Harga Masuk</div>
-            <div class="card-value" style="font-size:1.2rem;">{{ entry_price }}</div>
-        </div>
-        {% endif %}
-        {% if stop_loss %}
-        <div class="card" style="text-align:center;">
-            <div class="card-title">Stop Loss</div>
-            <div class="card-value" style="font-size:1.2rem;color:var(--red);">{{ stop_loss }}</div>
-        </div>
-        {% endif %}
-        {% if price_target %}
-        <div class="card" style="text-align:center;">
-            <div class="card-title">Target Harga</div>
-            <div class="card-value" style="font-size:1.2rem;color:var(--green);">{{ price_target }}</div>
-        </div>
-        {% endif %}
-    </div>
-    {% endif %}
+    <!-- VERDICT CARD - Always visible at top -->
+    <div class="verdict-card" style="background:linear-gradient(135deg, #0d2818 0%, #0a1a10 100%); border:2px solid var(--accent); border-radius:16px; padding:2rem; margin-bottom:1.5rem; position:relative; overflow:hidden;">
+        <div style="position:absolute; top:-20px; right:-20px; font-size:8rem; opacity:0.05;">&#9673;</div>
 
-    {% for field, label in [('market_report', 'Analisis Pasar'), ('sentiment_report', 'Analisis Sentimen'), ('news_report', 'Analisis Berita'), ('fundamentals_report', 'Analisis Fundamental'), ('investment_plan', 'Keputusan Tim Riset'), ('trader_investment_decision', 'Rencana Tim Trading'), ('final_trade_decision', 'Keputusan Manajemen Portofolio')] %}
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.2rem; flex-wrap:wrap;">
+            <span class="rating-badge {{ rating.class }}" style="font-size:1.4rem; padding:0.5rem 1.5rem;">{{ rating.label }}</span>
+            <h1 style="font-size:1.6rem; font-weight:800; color:#fff; margin:0;">{{ ticker }}</h1>
+            <span style="color:var(--text-muted); font-size:0.9rem;">analisis per {{ date }}</span>
+        </div>
+
+        {% if entry_price or stop_loss or price_target %}
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:1rem; margin-bottom:1rem;">
+            {% if entry_price %}
+            <div style="background:rgba(14,203,129,0.08); border-radius:10px; padding:0.9rem; text-align:center;">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">TARGET BELI</div>
+                <div style="font-size:1.1rem; font-weight:700; color:var(--accent);">Rp {{ entry_price }}</div>
+            </div>
+            {% endif %}
+            {% if stop_loss %}
+            <div style="background:rgba(255,77,77,0.08); border-radius:10px; padding:0.9rem; text-align:center;">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">STOP LOSS</div>
+                <div style="font-size:1.1rem; font-weight:700; color:var(--red);">Rp {{ stop_loss }}</div>
+            </div>
+            {% endif %}
+            {% if price_target %}
+            <div style="background:rgba(14,203,129,0.08); border-radius:10px; padding:0.9rem; text-align:center;">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">TARGET JUAL</div>
+                <div style="font-size:1.1rem; font-weight:700; color:var(--accent);">Rp {{ price_target }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <p style="color:var(--text-secondary); font-size:0.95rem; line-height:1.6; margin:0;">
+            {% if rating.label == "Beli" %}
+                &#9989; <strong>Rekomendasi: BELI.</strong> Tim analis kami melihat peluang bagus pada {{ ticker }}. Silakan baca penjelasan di bawah untuk detail harga masuk ideal dan strateginya.
+            {% elif rating.label == "Jual" %}
+                &#10060; <strong>Rekomendasi: JUAL.</strong> Tim analis kami menyarankan untuk keluar dari {{ ticker }}. Baca penjelasan di bawah untuk alasan lengkapnya.
+            {% elif rating.label == "Tahan" %}
+                &#9208; <strong>Rekomendasi: TAHAN.</strong> Tim analis kami menyarankan untuk menunggu dulu. Baca penjelasan di bawah untuk tahu kapan saat yang tepat masuk.
+            {% elif rating.label == "Overweight" %}
+                &#128200; <strong>Rekomendasi: OVERWEIGHT.</strong> Prospek positif, bisa tambah porsi secara bertahap. Baca detailnya di bawah.
+            {% elif rating.label == "Underweight" %}
+                &#128201; <strong>Rekomendasi: UNDERWEIGHT.</strong> Sebaiknya kurangi porsi dulu. Baca detailnya di bawah.
+            {% else %}
+                Lihat penjelasan lengkap di bawah.
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- EXPLANATION SECTIONS -->
+    {% for field, label in [
+        ('market_report', 'Analisis Pasar'),
+        ('sentiment_report', 'Analisis Sentimen'),
+        ('news_report', 'Analisis Berita'),
+        ('fundamentals_report', 'Analisis Fundamental'),
+        ('investment_plan', 'Keputusan Tim Riset'),
+        ('trader_investment_decision', 'Rencana Tim Trading'),
+        ('final_trade_decision', 'Keputusan Manajemen Portofolio')
+    ] %}
     {% if state.get(field) %}
     <div class="section">
-        <div class="section-header">
+        <div class="section-header {% if field == 'final_trade_decision' %}open{% endif %}">
             <span class="arrow">&#9654;</span>
             <span>{{ label }}</span>
         </div>
-        <div class="section-body">
-            <div class="section-content">{{ state[field] }}</div>
+        <div class="section-body {% if field == 'final_trade_decision' %}open{% endif %}">
+            <div class="section-content">{{ state[field] | replace('\n', '<br>') | safe }}</div>
         </div>
     </div>
     {% endif %}
     {% endfor %}
 
-    <div style="margin-top:2rem;">
-        <a href="/history" class="btn btn-outline">Lihat Riwayat Analisis</a>
-        <a href="/" class="btn btn-primary" style="margin-left:0.5rem;">Analisis Baru</a>
+    <div style="margin-top:2rem; display:flex; gap:0.8rem; flex-wrap:wrap;">
+        <a href="/api/report/download?ticker={{ ticker }}&date={{ date }}" class="btn btn-primary" style="text-decoration:none;">
+            &#128229; Unduh Laporan (Markdown)
+        </a>
+        <a href="/history" class="btn btn-outline">Riwayat Analisis</a>
+        <a href="/" class="btn btn-outline">Analisis Baru</a>
     </div>
 </div>
 

@@ -185,15 +185,16 @@ class PortfolioDecision(BaseModel):
     )
     executive_summary: str = Field(
         description=(
-            "Rencana aksi ringkas yang mencakup strategi masuk, penentuan ukuran posisi, "
-            "level risiko kunci, dan horison waktu. Dua hingga empat kalimat."
+            "Ringkasan actionable dalam bahasa Indonesia sederhana, 3-5 kalimat pendek. "
+            "Gunakan bahasa AWAM yang mudah dipahami orang tanpa latar belakang finansial. "
+            "Sebutkan rekomendasi, harga target, dan alasan utama dengan jelas."
         ),
     )
     investment_thesis: str = Field(
         description=(
-            "Alasan terperinci yang berlabuh pada bukti spesifik dari perdebatan "
-            "analis. Jika pelajaran sebelumnya dirujuk dalam konteks prompt, "
-            "gabungkanlah; jika tidak, andalkan semata-mata pada analisis saat ini."
+            "Penjelasan lebih detail dengan data dari debat analis. "
+            "Gunakan bullet points, sebutkan angka-angka kunci, dan jelaskan "
+            "SETIAP poin dengan bahasa yang tetap mudah dipahami."
         ),
     )
     price_target: Optional[float] = Field(

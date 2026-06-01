@@ -304,3 +304,76 @@ async def api_analyze(
         return JSONResponse(
             content={"error": str(e)}, status_code=500
         )
+
+
+@router.get("/api/report/download")
+async def download_report(ticker: str = Query(...), date: str = Query(...)):
+    from fastapi.responses import StreamingResponse
+    import io
+
+    results_dir = Path(DEFAULT_CONFIG["results_dir"]) / ticker / "TradeyukStrategy_logs"
+    log_path = results_dir / f"full_states_log_{date}.json"
+
+    if not log_path.exists():
+        return JSONResponse({"error": "Laporan tidak ditemukan"}, status_code=404)
+
+    with open(log_path, "r", encoding="utf-8") as f:
+        state = json.load(f)
+
+    rating = _extract_rating(state.get("final_trade_decision", ""))
+    entry_price = _extract_price(state.get("trader_investment_decision", ""), "harga masuk") or _extract_price(state.get("trader_investment_plan", ""), "harga masuk")
+    stop_loss = _extract_price(state.get("trader_investment_decision", ""), "stop loss") or _extract_price(state.get("trader_investment_plan", ""), "stop loss")
+    price_target = _extract_price(state.get("final_trade_decision", ""), "target harga") or _extract_price(state.get("investment_plan", ""), "target harga")
+
+    md = []
+    md.append(f"# Laporan Analisis Tradeyuk")
+    md.append(f"**Ticker:** {ticker}  ")
+    md.append(f"**Tanggal:** {date}  ")
+    md.append(f"**Dibuat:** {datetime.now().strftime('%Y-%m-%d %H:%M')}  ")
+    md.append("")
+    md.append("---")
+    md.append("")
+    md.append(f"## 📊 Verdict Final")
+    md.append("")
+    md.append("| Komponen | Nilai |")
+    md.append("|---|---|")
+    md.append(f"| **Rekomendasi** | **{rating.get('label', '?')}** |")
+    if entry_price:
+        md.append(f"| Target Beli Ideal | Rp {entry_price} |")
+    if stop_loss:
+        md.append(f"| Stop Loss | Rp {stop_loss} |")
+    if price_target:
+        md.append(f"| Target Jual | Rp {price_target} |")
+    md.append("")
+    md.append("---")
+    md.append("")
+
+    for field, label in [
+        ("market_report", "Analisis Pasar"),
+        ("sentiment_report", "Analisis Sentimen"),
+        ("news_report", "Analisis Berita"),
+        ("fundamentals_report", "Analisis Fundamental"),
+        ("investment_plan", "Keputusan Tim Riset"),
+        ("trader_investment_plan", "Rencana Tim Trading"),
+        ("final_trade_decision", "Keputusan Manajemen Portofolio"),
+    ]:
+        content = state.get(field, "")
+        if content:
+            md.append(f"## {label}")
+            md.append("")
+            md.append(content)
+            md.append("")
+
+    md.append("---")
+    md.append(f"*Laporan dibuat oleh Tradeyuk — Framework Trading AI Multi-Agen*")
+    md.append(f"*Powered by Grandzor*")
+
+    report_text = "\n".join(md)
+
+    return StreamingResponse(
+        io.BytesIO(report_text.encode("utf-8")),
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f"attachment; filename=Tradeyuk_{ticker}_{date}.md"
+        }
+    )

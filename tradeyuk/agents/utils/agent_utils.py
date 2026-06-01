@@ -33,7 +33,12 @@ def get_language_instruction() -> str:
     lang = get_config().get("output_language", "Bahasa Indonesia")
     if lang.strip().lower() == "english":
         return ""
-    return f" Tulis seluruh respons Anda dalam bahasa {lang}."
+    return (
+        f" Tulis seluruh respons Anda dalam bahasa {lang} yang SEDERHANA dan MUDAH DIPAHAMI. "
+        "Gunakan bahasa sehari-hari yang bisa dimengerti orang AWAM (bukan ahli finansial). "
+        "Hindari jargon teknis. Kalau terpaksa pakai istilah teknis, jelaskan artinya dalam kurung. "
+        "Gunakan kalimat pendek. Buat laporanmu seperti kamu menjelaskan ke teman yang tidak paham saham."
+    )
 
 
 def build_instrument_context(ticker: str, asset_type: str = "stock") -> str:

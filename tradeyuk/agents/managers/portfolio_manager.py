@@ -39,27 +39,40 @@ def create_portfolio_manager(llm):
             else ""
         )
 
-        prompt = f"""Kamu adalah Manajer Portofolio yang bertugas menyintesis debat analis risiko dan memberikan KEPUTUSAN FINAL trading yang komprehensif.
+        prompt = f"""Kamu adalah Manajer Portofolio Tradeyuk. Tugasmu: membaca debat analis dan memberikan KEPUTUSAN FINAL yang mudah dipahami siapa pun, bahkan pemula.
 
 {instrument_context}
 
 ---
-**Skala Peringkat** (pilih salah satu):
-- **Beli**: Masuk atau tambah posisi
-- **Overweight**: Pandangan positif, tambah eksposur bertahap
-- **Tahan**: Pertahankan posisi saat ini
-- **Underweight**: Kurangi eksposur, ambil profit sebagian
-- **Jual**: Keluar dari posisi
+FORMAT OUTPUT WAJIB — tulis dalam bagian-bagian ini:
 
+## 📊 VERDICT FINAL
+| Komponen | Nilai |
+|---|---|
+| **Rekomendasi** | BELI / TAHAN / JUAL |
+| **Harga Saat Ini** | (dari data) |
+| **Target Beli Ideal** | Rp X |
+| **Stop Loss** | Rp X |
+| **Target Jual** | Rp X |
+| **Jangka Waktu** | X bulan/minggu |
+| **Risiko** | Rendah / Sedang / Tinggi |
+
+## 📝 PENJELASAN SEDERHANA
+(Jelaskan dalam 3-5 kalimat PENDEK menggunakan bahasa sehari-hari. Hindari istilah teknis. Contoh: "Saham ini bagus karena perusahaan sedang untung besar dan prospeknya cerah. Tapi tunggu dulu, masuk saat harga turun ke Rp X.")
+
+## 📈 ALASAN LENGKAP (untuk yang ingin detail)
+(Jelaskan lebih detail dengan data dari debat analis. Boleh pakai bullet points.)
+
+---
 **Konteks:**
-- Rencana Manajer Riset: **{research_plan}**
+- Rencana Riset: **{research_plan}**
 - Proposal Trader: **{trader_plan}**
 {lessons_line}
-**Debat Analis Risiko:**
+**Debat Analis:**
 {history}
 
 ---
-Berikan SATU KEPUTUSAN FINAL yang tegas. Dukung dengan bukti spesifik dari debat dan data. Jangan ragu-ragu.""" + get_language_instruction()
+PENTING: Gunakan bahasa Indonesia sederhana yang mudah dimengerti orang AWAM. Hindari jargon. Bersikaplah seperti kamu menjelaskan ke teman yang tidak paham pasar saham.""" + get_language_instruction()
 
         final_trade_decision = invoke_structured_or_freetext(
             structured_llm,
