@@ -117,37 +117,52 @@ async def analyze_start(
 
 @router.get("/analyze/{ticker}/{date}", response_class=HTMLResponse)
 async def view_analysis(request: Request, ticker: str, date: str):
-    results_dir = Path(DEFAULT_CONFIG["results_dir"]) / ticker / "TradeyukStrategy_logs"
-    log_path = results_dir / f"full_states_log_{date}.json"
+    results_dir = Path(DEFAULT_CONFIG["results_dir"]) / ticker
 
+    # Try JSON format first (TradeyukStrategy_logs)
+    log_path = results_dir / "TradeyukStrategy_logs" / f"full_states_log_{date}.json"
     if log_path.exists():
         with open(log_path, "r", encoding="utf-8") as f:
             state = json.load(f)
         rating = _extract_rating(state.get("final_trade_decision", ""))
-        entry_price = _extract_price(
-            state.get("trader_investment_decision", ""), "harga masuk"
-        ) or _extract_price(state.get("trader_investment_plan", ""), "harga masuk")
-        stop_loss = _extract_price(
-            state.get("trader_investment_decision", ""), "stop loss"
-        ) or _extract_price(state.get("trader_investment_plan", ""), "stop loss")
-        price_target = _extract_price(
-            state.get("final_trade_decision", ""), "target harga"
-        ) or _extract_price(state.get("investment_plan", ""), "target harga")
+        entry_price = _extract_price(state.get("trader_investment_decision", ""), "harga masuk") or _extract_price(state.get("trader_investment_plan", ""), "harga masuk")
+        stop_loss = _extract_price(state.get("trader_investment_decision", ""), "stop loss") or _extract_price(state.get("trader_investment_plan", ""), "stop loss")
+        price_target = _extract_price(state.get("final_trade_decision", ""), "target harga") or _extract_price(state.get("investment_plan", ""), "target harga")
+        return templates.TemplateResponse(request, "analysis_result.html", {
+            "ticker": ticker, "date": date, "state": state,
+            "rating": rating, "entry_price": entry_price,
+            "stop_loss": stop_loss, "price_target": price_target,
+        })
 
-        return templates.TemplateResponse(
-            request,
-            "analysis_result.html",
-            {
-                "ticker": ticker,
-                "date": date,
-                "state": state,
-                "rating": rating,
-                "entry_price": entry_price,
-                "stop_loss": stop_loss,
-                "price_target": price_target,
-                "field_labels": _FIELD_LABELS,
-            },
-        )
+    # Try CLI format (TICKER/DATE/reports/*.md)
+    cli_dir = results_dir / date / "reports"
+    if cli_dir.exists():
+        state = {}
+        report_map = {
+            "market_report.md": "market_report",
+            "sentiment_report.md": "sentiment_report",
+            "news_report.md": "news_report",
+            "fundamentals_report.md": "fundamentals_report",
+            "investment_plan.md": "investment_plan",
+            "trader_investment_plan.md": "trader_investment_plan",
+            "final_trade_decision.md": "final_trade_decision",
+        }
+        for filename, key in report_map.items():
+            fpath = cli_dir / filename
+            if fpath.exists():
+                with open(fpath, "r", encoding="utf-8") as f:
+                    state[key] = f.read()
+
+        if state:
+            rating = _extract_rating(state.get("final_trade_decision", ""))
+            entry_price = _extract_price(state.get("trader_investment_plan", ""), "harga masuk")
+            stop_loss = _extract_price(state.get("trader_investment_plan", ""), "stop loss")
+            price_target = _extract_price(state.get("final_trade_decision", ""), "target harga") or _extract_price(state.get("investment_plan", ""), "target harga")
+            return templates.TemplateResponse(request, "analysis_result.html", {
+                "ticker": ticker, "date": date, "state": state,
+                "rating": rating, "entry_price": entry_price,
+                "stop_loss": stop_loss, "price_target": price_target,
+            })
 
     return templates.TemplateResponse(
         request,
@@ -165,34 +180,58 @@ async def history(request: Request):
         for ticker_dir in sorted(results_dir.iterdir()):
             if not ticker_dir.is_dir():
                 continue
+
+            # Format 1: TradeyukStrategy_logs/full_states_log_*.json (web app format)
             logs_dir = ticker_dir / "TradeyukStrategy_logs"
-            if not logs_dir.exists():
-                continue
-            for log_file in sorted(logs_dir.glob("full_states_log_*.json"), reverse=True):
-                date_str = log_file.stem.replace("full_states_log_", "")
-                try:
-                    with open(log_file, "r", encoding="utf-8") as f:
-                        state = json.load(f)
-                    rating = _extract_rating(
-                        state.get("final_trade_decision", "")
-                    )
-                    entries.append(
-                        {
+            if logs_dir.exists():
+                for log_file in sorted(logs_dir.glob("full_states_log_*.json"), reverse=True):
+                    date_str = log_file.stem.replace("full_states_log_", "")
+                    try:
+                        with open(log_file, "r", encoding="utf-8") as f:
+                            state = json.load(f)
+                        rating = _extract_rating(state.get("final_trade_decision", ""))
+                        entries.append({
                             "ticker": ticker_dir.name,
                             "date": date_str,
                             "rating": rating,
                             "company": state.get("company_of_interest", ticker_dir.name),
-                        }
-                    )
-                except Exception:
-                    entries.append(
-                        {
+                        })
+                    except Exception:
+                        entries.append({
                             "ticker": ticker_dir.name,
                             "date": date_str,
                             "rating": {"label": "Tidak Diketahui", "class": "hold"},
                             "company": ticker_dir.name,
-                        }
-                    )
+                        })
+
+            # Format 2: YYYY-MM-DD/reports/*.md (CLI format)
+            for date_dir in sorted(ticker_dir.iterdir(), reverse=True):
+                if not date_dir.is_dir():
+                    continue
+                date_str = date_dir.name
+                if not date_str.replace("-", "").isdigit():
+                    continue
+
+                # Check if already covered by JSON format above
+                already_exists = any(e["ticker"] == ticker_dir.name and e["date"] == date_str for e in entries)
+                if already_exists:
+                    continue
+
+                reports_dir = date_dir / "reports"
+                final_report = reports_dir / "final_trade_decision.md"
+                if final_report.exists():
+                    try:
+                        with open(final_report, "r", encoding="utf-8") as f:
+                            content = f.read()
+                        rating = _extract_rating(content)
+                        entries.append({
+                            "ticker": ticker_dir.name,
+                            "date": date_str,
+                            "rating": rating,
+                            "company": ticker_dir.name,
+                        })
+                    except Exception:
+                        pass
 
     return templates.TemplateResponse(
         request, "history.html", {"entries": entries[:50]}
